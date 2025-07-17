@@ -1,0 +1,121 @@
+.dashboard-container {
+    padding: 1rem;
+}
+
+/* Header */
+.dashboard-header {
+    margin-bottom: 1rem;
+}
+
+/* Survey Card */
+.survey-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e2e2;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.survey-card:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.icon-text-wrap {
+    gap: 12px;
+    align-items: center;
+}
+
+/* Text */
+.text-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.survey-title {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.survey-meta {
+    font-size: 13px;
+    color: #888;
+}
+
+/* Stats */
+.stats-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-block {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #888;
+}
+
+.stat-value {
+    font-weight: bold;
+    font-size: 15px;
+    margin-top: 4px;
+}
+
+/* Actions */
+.actions-area {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+}
+
+.action-icon {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    transition: transform 0.15s ease-in-out;
+    fill: currentColor;
+}
+
+.action-icon:hover {
+    transform: scale(1.2);
+}
+
+.icon-blue {
+    color: #1b75d0;
+}
+
+.icon-grey {
+    color: #a1a1a1;
+}
+
+.icon-red {
+    color: #d7373f;
+}
+
+/* SVG Icon Box */
+.survey-icon-container {
+    background-color: #9776ff;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.custom-svg-icon {
+    width: 20px;
+    height: 20px;
+}

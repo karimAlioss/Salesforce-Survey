@@ -1,0 +1,116 @@
+<template>
+    <lightning-card title="Survey Builder">
+        <div class="slds-p-around_medium">
+
+            <!-- SURVEY INFO -->
+            <lightning-input label="Survey Title" value={surveyTitle} onchange={handleTitleChange}></lightning-input>
+            <lightning-textarea label="Survey Description" value={surveyDescription} onchange={handleDescriptionChange}></lightning-textarea>
+            <lightning-combobox label="Category" value={category} options={categoryOptions} onchange={handleCategoryChange}></lightning-combobox>
+
+            <hr class="slds-m-vertical_medium" />
+
+            <!-- SECTIONS -->
+            <template for:each={sections} for:item="section">
+                <div key={section.id} class="slds-box slds-theme_default slds-m-bottom_large section-box">
+                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                        <lightning-input label="Section Title" value={section.name} data-id={section.id} onchange={handleSectionNameChange}></lightning-input>
+                        <lightning-button-icon icon-name="utility:delete" title="Delete Section" onclick={deleteSection} data-id={section.id}></lightning-button-icon>
+                    </div>
+
+                    <!-- QUESTIONS -->
+                    <template for:each={section.questions} for:item="q">
+                        <div key={q.id} class="slds-box slds-m-bottom_medium" draggable="true"
+                            data-section-id={section.id} data-question-id={q.id}
+                            ondragstart={handleDragStart} ondragover={handleDragOver} ondrop={handleDrop}>
+
+                            <div class="slds-grid slds-grid_align-spread">
+                                <lightning-input
+                                    label="Question Label"
+                                    value={q.label}
+                                    data-section-id={section.id}
+                                    data-question-id={q.id}
+                                    onchange={handleQuestionLabelChange}>
+                                </lightning-input>
+                                <lightning-button-icon icon-name="utility:delete" title="Delete Question" onclick={deleteQuestion} data-section-id={section.id} data-question-id={q.id}></lightning-button-icon>
+                            </div>
+
+                            <template if:true={q.error}>
+                                <div class="slds-text-color_error slds-text-body_small">
+                                    {q.error}
+                                </div>
+                            </template>
+
+                            <lightning-combobox label="Question Type" value={q.type} options={questionTypeOptions} data-section-id={section.id} data-question-id={q.id} onchange={handleQuestionTypeChange}></lightning-combobox>
+                            <lightning-input type="checkbox" label="Required" checked={q.required} data-section-id={section.id} data-question-id={q.id} onchange={handleQuestionRequiredChange}></lightning-input>
+
+                            <!-- MULTIPLE TOGGLE (Checkbox only) -->
+                            <template if:true={q.showToggle}>
+                                <lightning-input
+                                    type="toggle"
+                                    label="Allow multiple answers"
+                                    checked={q.allowMultiple}
+                                    data-section-id={section.id}
+                                    data-question-id={q.id}
+                                    onchange={handleAllowMultipleChange}>
+                                </lightning-input>
+                            </template>
+
+                            <!-- OPTIONS -->
+                            <template if:true={q.options}>
+                                <div class="slds-m-vertical_small slds-text-title_bold">Options:</div>
+
+                                <template for:each={q.options} for:item="opt">
+                                    <div key={opt.id} class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                                        <lightning-input
+                                            class="slds-col slds-size_10-of-12"
+                                            value={opt.label}
+                                            data-section-id={section.id}
+                                            data-question-id={q.id}
+                                            data-option-id={opt.id}
+                                            onchange={updateOptionLabel}
+                                            placeholder="Option text">
+                                        </lightning-input>
+                                        <template if:true={opt.error}>
+                                            <div class="slds-text-color_error slds-text-body_small">
+                                                {opt.error}
+                                            </div>
+                                        </template>
+                                        <lightning-button-icon icon-name="utility:close" title="Delete Option" data-section-id={section.id} data-question-id={q.id} data-option-id={opt.id} onclick={deleteOption}></lightning-button-icon>
+                                    </div>
+                                </template>
+
+                                <lightning-button
+                                    label="Add Option"
+                                    icon-name="utility:add"
+                                    onclick={addOption}
+                                    data-section-id={section.id}
+                                    data-question-id={q.id}>
+                                </lightning-button>
+                            </template>
+                        </div>
+                    </template>
+
+                    <lightning-button
+                        label="Add Question"
+                        icon-name="utility:add"
+                        onclick={addQuestion}
+                        data-section-id={section.id}>
+                    </lightning-button>
+                </div>
+            </template>
+
+            <lightning-button
+                label="Add Section"
+                icon-name="utility:add"
+                onclick={addSection}
+                class="slds-m-bottom_large">
+            </lightning-button>
+
+            <!-- ACTION BUTTONS -->
+            <div class="slds-grid slds-gutters slds-m-top_large">
+                <lightning-button label="Save to Draft" onclick={handleSaveDraft} class="slds-col slds-size_1-of-2"></lightning-button>
+                <lightning-button label="Publish" variant="brand" onclick={handlePublish} class="slds-col slds-size_1-of-2"></lightning-button>
+            </div>
+        </div>
+    </lightning-card>
+</template>

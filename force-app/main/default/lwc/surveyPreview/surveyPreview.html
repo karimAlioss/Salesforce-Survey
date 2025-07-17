@@ -1,0 +1,47 @@
+<template>
+    <div class="slds-box slds-theme_default slds-m-around_medium">
+        <h2 class="slds-text-heading_medium">{surveyTitle}</h2>
+        <p class="slds-text-body_regular slds-m-bottom_medium">{surveyDescription}</p>
+
+        <template if:true={questions}>
+            <template for:each={questions} for:item="question">
+                <div key={question.id} class="slds-m-bottom_medium">
+                    <label class="slds-form-element__label">
+                        {question.order}. {question.label}
+                        <template if:true={question.required}>
+                            <abbr title="required">*</abbr>
+                        </template>
+                    </label>
+
+                    <template if:true={question.isText}>
+                        <lightning-input type="text" class="slds-m-top_xx-small"></lightning-input>
+                    </template>
+
+                    <template if:true={question.isRadio}>
+                        <template for:each={question.options} for:item="opt">
+                            <div key={opt.Id} class="slds-m-top_xx-small">
+                                <lightning-input type="radio" name={question.id} label={opt.Label__c}></lightning-input>
+                            </div>
+                        </template>
+                    </template>
+
+                    <template if:true={question.isCheckbox}>
+                        <template for:each={question.options} for:item="opt">
+                            <div key={opt.Id} class="slds-m-top_xx-small">
+                                <lightning-input type="checkbox" label={opt.Label__c}></lightning-input>
+                            </div>
+                        </template>
+                    </template>
+
+                    <template if:true={question.isDropdown}>
+                        <lightning-combobox
+                            class="slds-m-top_xx-small"
+                            options={question.dropdownOptions}
+                            placeholder="Select an option">
+                        </lightning-combobox>
+                    </template>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>

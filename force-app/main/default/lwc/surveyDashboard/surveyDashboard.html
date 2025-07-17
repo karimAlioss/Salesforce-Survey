@@ -1,0 +1,81 @@
+<template>
+    <lightning-card>
+        <div class="dashboard-container">
+            
+            <!-- 🔹 Header -->
+            <div class="dashboard-header slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                <h2 class="slds-text-heading_medium">My Surveys</h2>
+                <lightning-button 
+                    variant="brand"
+                    label="+ Create Survey"
+                    onclick={handleCreateNew}>
+                </lightning-button>
+            </div>
+
+            <!-- 🔸 Survey Cards -->
+            <template if:true={surveys.length}>
+                <template for:each={surveys} for:item="survey">
+                    <div key={survey.Id} class="survey-card slds-grid slds-wrap slds-grid_align-start">
+
+                        <!-- Icon + Title Group -->
+                        <div class="slds-col slds-size_6-of-12 slds-grid slds-align-center icon-text-wrap">
+                            <div class="survey-icon-container">
+                                <svg class="custom-svg-icon" clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2"
+                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="m11.6 11c0-.552-.448-1-1-1-1.655 0-4.945 0-6.6 0-.552 0-1 .448-1 1v9c0 .552.448 1 1 1h6.6c.552 0 1-.448 1-1 0-2.092 0-6.908 0-9zm9.4 6c0-.552-.448-1-1-1h-6c-.538 0-1 .477-1 1v3c0 .552.448 1 1 1h6c.552 0 1-.448 1-1zm0-13c0-.552-.448-1-1-1-1.537 0-4.463 0-6 0-.552 0-1 .448-1 1v9.6c0 .552.448 1 1 1h6c.552 0 1-.448 1-1 0-2.194 0-7.406 0-9.6zm-9.4 0c0-.552-.448-1-1-1-1.655 0-4.945 0-6.6 0-.552 0-1 .448-1 1v3.6c0 .552.448 1 1 1h6.6c.552 0 1-.448 1-1 0-1.017 0-2.583 0-3.6z"
+                                        fill="#ffffff" />
+                                </svg>
+                            </div>
+                            <div class="text-area">
+                                <div class="survey-title">{survey.Survey_Name__c}</div>
+                                <div class="survey-meta">Created • 12 Questions</div>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="slds-col slds-size_3-of-12 stats-area">
+                            <div class="stat-block">
+                                <div class="stat-label">Owner</div>
+                                <div class="stat-value">Elkhayloufi</div>
+                            </div>
+                            <div class="stat-block">
+                                <div class="stat-label">Created Date</div>
+                                <div class="stat-value">17/07/2025</div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="slds-col slds-size_3-of-12 actions-area slds-align_absolute-center">
+                            <svg class="action-icon icon-blue" data-id={survey.Id} onclick={handleEdit} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <title>Edit</title>
+                                <path d="M18.308 0l-16.87 16.873-1.436 7.127 7.125-1.437 16.872-16.875-5.691-5.688zm-15.751 21.444l.723-3.585 12.239-12.241 2.861 2.862-12.239 12.241-3.584.723zm17.237-14.378l-2.861-2.862 1.377-1.377 2.861 2.861-1.377 1.378z"/>
+                            </svg>
+
+                            <svg class="action-icon icon-grey" data-id={survey.Id} onclick={handleTogglePreview} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <title>Preview</title>
+                                <path d="M12 5c-7.633 0-12 7-12 7s4.371 7 12 7 12-7 12-7-4.367-7-12-7zm0 12c-2.761 0-5-2.239-5-5s2.239-5 
+                                5-5 5 2.239 5 5-2.239 5-5 5zm0-8c-1.656 0-3 
+                                1.344-3 3s1.344 3 3 3 3-1.344 
+                                3-3-1.344-3-3-3z"/>
+                            </svg>
+
+                            <svg class="action-icon icon-red" data-id={survey.Id} onclick={handleDeleteSurvey} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <title>Delete</title>
+                                <path d="M10 2v2h4v-2h-4zm12 2v2h-20v-2h5.333l1.6-2h6.134l1.6 2h5.333zm-2 4l-1 14h-12l-1-14h14zm-4 
+                                2h-6v10h6v-10z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <!-- 🛑 No Surveys -->
+            <template if:true={noSurveys}>
+                <div class="slds-text-align_center slds-text-body_regular slds-p-vertical_medium">
+                    No surveys found.
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

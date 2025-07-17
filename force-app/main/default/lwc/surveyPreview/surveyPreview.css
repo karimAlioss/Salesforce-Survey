@@ -1,0 +1,22 @@
+.preview-description {
+    font-style: italic;
+    color: #555;
+    margin-bottom: 1rem;
+}
+
+.preview-question {
+    margin-bottom: 2rem;
+}
+
+.preview-label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.checkbox-group {
+    margin-left: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}

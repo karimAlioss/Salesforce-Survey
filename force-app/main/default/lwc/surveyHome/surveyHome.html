@@ -1,0 +1,15 @@
+<template>
+   <template if:true={showDashboard}>
+      <c-survey-dashboard
+         oncreatenew={handleCreateNew}
+         oneditsurvey={handleEditSurvey}>
+      </c-survey-dashboard>
+   </template>
+
+   <template if:true={showBuilder}>
+      <c-survey-builder
+         survey-id={selectedSurveyId}
+         onback={handleBackToDashboard}>
+      </c-survey-builder>
+   </template>
+</template>
