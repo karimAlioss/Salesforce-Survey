@@ -1,4 +1,5 @@
 public class QuestionDTO {
+    @AuraEnabled public String Id;
     @AuraEnabled public String sectionName;
     @AuraEnabled public String questionLabel;
     @AuraEnabled public String questionType;

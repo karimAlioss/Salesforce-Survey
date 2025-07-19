@@ -4,7 +4,6 @@ public with sharing class SurveyController {
     public static Id saveSurveyAndQuestions(String title, String description, String status, String category, String questionsJSON) {
         try {
             List<QuestionDTO> questions = (List<QuestionDTO>) JSON.deserialize(questionsJSON, List<QuestionDTO>.class);
-            System.debug('📥 JSON payload received = simo: ' + JSON.serializePretty(questions));
             if (String.isBlank(title)) {
                 throw new AuraHandledException('Survey title is required.');
             }
@@ -23,9 +22,7 @@ public with sharing class SurveyController {
                     Category__c = category
                 );
                 insert survey;
-                System.debug('✅ Survey inserted: ' + survey.Id);
             } catch (Exception e) {
-                System.debug('❌ Failed to insert Survey: ' + e.getMessage());
                 throw new AuraHandledException('Failed to insert Survey: ' + e.getMessage());
             }
 
@@ -34,10 +31,7 @@ public with sharing class SurveyController {
 
             try {
                 for (QuestionDTO q : questions) {
-                    System.debug('📨 Incoming QuestionDTO: ' + JSON.serializePretty(q));
-
                     if (String.isBlank(q.questionLabel)) {
-                        System.debug('⛔ Skipped due to blank label');
                         continue;
                     }
 
@@ -51,20 +45,15 @@ public with sharing class SurveyController {
                         Allow_Multiple__c = q.questionType == 'Checkbox' ? q.allowMultiple : false
                     );
 
-                    System.debug('🧾 Prepared Question Record: ' + JSON.serialize(sq));
                     questionRecords.add(sq);
                     validQuestions.add(q);
                 }
 
                 if (!questionRecords.isEmpty()) {
                     insert questionRecords;
-                    System.debug('✅ Inserted questions: ' + questionRecords.size());
-                } else {
-                    System.debug('⚠️ No valid questions to insert.');
                 }
 
             } catch (Exception e) {
-                System.debug('❌ Error while processing questions: ' + e.getMessage());
                 throw new AuraHandledException('Failed to process questions: ' + e.getMessage());
             }
 
@@ -79,7 +68,6 @@ public with sharing class SurveyController {
                         Integer order = 1;
                         for (OptionDTO opt : q.options) {
                             if (String.isBlank(opt.label)) {
-                                System.debug('⚠️ Skipped blank option for question: ' + createdQ.Id);
                                 continue;
                             }
 
@@ -95,21 +83,136 @@ public with sharing class SurveyController {
 
                 if (!optionRecords.isEmpty()) {
                     insert optionRecords;
-                    System.debug('✅ Inserted options: ' + optionRecords.size());
-                } else {
-                    System.debug('⚠️ No options to insert.');
                 }
 
             } catch (Exception e) {
-                System.debug('❌ Error while processing options: ' + e.getMessage());
                 throw new AuraHandledException('Failed to process options: ' + e.getMessage());
             }
 
             return survey.Id;
 
         } catch (Exception e) {
-            System.debug('🔥 Top-level error: ' + e.getMessage());
             throw new AuraHandledException('Unexpected error: ' + e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static Id updateSurvey(Id surveyId, String title, String description, String status, String category, String questionsJSON) {
+        if (String.isBlank(title)) throw new AuraHandledException('Survey title is required.');
+        if (String.isBlank(category)) throw new AuraHandledException('Survey category is required.');
+
+        List<QuestionDTO> questionDTOs = (List<QuestionDTO>) JSON.deserialize(questionsJSON, List<QuestionDTO>.class);
+
+        Survey__c survey = [SELECT Id FROM Survey__c WHERE Id = :surveyId];
+        survey.Name = title;
+        survey.Survey_Name__c = title;
+        survey.Description__c = description;
+        survey.Status__c = status;
+        survey.Category__c = category;
+        update survey;
+
+        Map<Id, Survey_Question__c> existingQuestions = new Map<Id, Survey_Question__c>([
+            SELECT Id FROM Survey_Question__c WHERE Survey__c = :surveyId
+        ]);
+
+        Map<Id, Survey_Option__c> existingOptions = new Map<Id, Survey_Option__c>();
+        if (!existingQuestions.isEmpty()) {
+            for (Survey_Option__c opt : [
+                SELECT Id, Survey_Question__c FROM Survey_Option__c
+                WHERE Survey_Question__c IN :existingQuestions.keySet()
+            ]) {
+                existingOptions.put(opt.Id, opt);
+            }
+        }
+
+        List<Survey_Question__c> questionsToInsert = new List<Survey_Question__c>();
+        List<Survey_Question__c> questionsToUpdate = new List<Survey_Question__c>();
+
+        for (QuestionDTO q : questionDTOs) {
+            if (String.isBlank(q.questionLabel)) continue;
+
+            if (q.Id != null && existingQuestions.containsKey(q.Id)) {
+                Survey_Question__c existing = existingQuestions.get(q.Id);
+                existing.Label__c = q.questionLabel;
+                existing.Question_Type__c = q.questionType;
+                existing.Required__c = q.required;
+                existing.Order__c = q.questionOrder;
+                existing.Section__c = q.sectionName;
+                existing.Allow_Multiple__c = q.questionType == 'Checkbox' ? q.allowMultiple : false;
+                questionsToUpdate.add(existing);
+            } else {
+                Survey_Question__c newQ = new Survey_Question__c(
+                    Label__c = q.questionLabel,
+                    Question_Type__c = q.questionType,
+                    Required__c = q.required,
+                    Order__c = q.questionOrder,
+                    Section__c = q.sectionName,
+                    Survey__c = survey.Id,
+                    Allow_Multiple__c = q.questionType == 'Checkbox' ? q.allowMultiple : false
+                );
+                questionsToInsert.add(newQ);
+            }
+        }
+
+        if (!questionsToInsert.isEmpty()) insert questionsToInsert;
+        if (!questionsToUpdate.isEmpty()) update questionsToUpdate;
+
+        List<Survey_Option__c> optionsToInsert = new List<Survey_Option__c>();
+        List<Survey_Option__c> optionsToUpdate = new List<Survey_Option__c>();
+        Set<Id> retainedOptionIds = new Set<Id>();
+
+        for (QuestionDTO q : questionDTOs) {
+            if (q.Id == null) continue;
+
+            if (q.options != null) {
+                Integer order = 1;
+                for (OptionDTO opt : q.options) {
+                    if (String.isBlank(opt.label)) continue;
+
+                    if (opt.Id != null && existingOptions.containsKey(opt.Id)) {
+                        Survey_Option__c existing = existingOptions.get(opt.Id);
+                        existing.Label__c = opt.label;
+                        existing.Order__c = order++;
+                        optionsToUpdate.add(existing);
+                        retainedOptionIds.add(existing.Id);
+                    } else {
+                        Survey_Option__c newOpt = new Survey_Option__c(
+                            Label__c = opt.label,
+                            Order__c = order++,
+                            Survey_Question__c = q.Id
+                        );
+                        optionsToInsert.add(newOpt);
+                    }
+                }
+            }
+        }
+
+        if (!optionsToInsert.isEmpty()) insert optionsToInsert;
+        if (!optionsToUpdate.isEmpty()) update optionsToUpdate;
+
+        List<Survey_Option__c> optionsToDelete = new List<Survey_Option__c>();
+        for (Id optId : existingOptions.keySet()) {
+            if (!retainedOptionIds.contains(optId)) {
+                optionsToDelete.add(existingOptions.get(optId));
+            }
+        }
+        if (!optionsToDelete.isEmpty()) delete optionsToDelete;
+
+        return survey.Id;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Survey__c> getAllSurveys() {
+        try {
+            List<Survey__c> surveys = [
+                SELECT Id, Survey_Name__c, Description__c, Status__c, Category__c, CreatedDate
+                FROM Survey__c
+                WHERE Status__c IN ('Draft', 'Published')
+                ORDER BY LastModifiedDate DESC
+            ];
+            return surveys;
+        } catch (Exception e) {
+            throw new AuraHandledException('Unable to load surveys: ' + e.getMessage());
         }
     }
 
@@ -144,25 +247,7 @@ public with sharing class SurveyController {
                 'questions' => questionData
             };
         } catch (Exception e) {
-            System.debug('❌ getSurveyForPreview error: ' + e.getMessage());
             throw new AuraHandledException('Failed to load survey: ' + e.getMessage());
-        }
-    }
-
-    @AuraEnabled(cacheable=true)
-    public static List<Survey__c> getAllSurveys() {
-        try {
-            List<Survey__c> surveys = [
-                SELECT Id, Survey_Name__c, Description__c, Status__c, Category__c, CreatedDate
-                FROM Survey__c
-                WHERE Status__c IN ('Draft', 'Published')
-                ORDER BY LastModifiedDate DESC
-            ];
-            System.debug('📊 Loaded surveys: ' + surveys.size());
-            return surveys;
-        } catch (Exception e) {
-            System.debug('❌ getAllSurveys error: ' + e.getMessage());
-            throw new AuraHandledException('Unable to load surveys: ' + e.getMessage());
         }
     }
 
@@ -182,12 +267,8 @@ public with sharing class SurveyController {
             delete options;
             delete questions;
             delete [SELECT Id FROM Survey__c WHERE Id = :surveyId];
-
-            System.debug('🗑️ Survey and related records deleted');
         } catch (Exception e) {
-            System.debug('❌ Delete error: ' + e.getMessage());
             throw new AuraHandledException('Failed to delete survey: ' + e.getMessage());
         }
     }
-
-}
+} 

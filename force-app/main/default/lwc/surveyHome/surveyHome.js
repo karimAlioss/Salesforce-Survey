@@ -1,9 +1,10 @@
 import { LightningElement, track } from 'lwc';
 
 export default class SurveyHome extends LightningElement {
+
+   @track selectedSurveyId;
    @track showDashboard = true;
    @track showBuilder = false;
-   @track selectedSurveyId = null;
 
    handleCreateNew() {
       this.showDashboard = false;

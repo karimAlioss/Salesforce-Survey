@@ -1,9 +1,12 @@
-import { LightningElement, track } from 'lwc';
-import saveSurveyAndQuestions from '@salesforce/apex/SurveyController.saveSurveyAndQuestions';
+import { LightningElement, track, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import updateSurvey from '@salesforce/apex/SurveyController.updateSurvey';
+import getSurveyForPreview from '@salesforce/apex/SurveyController.getSurveyForPreview';
+import saveSurveyAndQuestions from '@salesforce/apex/SurveyController.saveSurveyAndQuestions';
 
 export default class SurveyBuilder extends LightningElement {
 
+    @api surveyId;
     @track surveyTitle = '';
     @track surveyDescription = '';
     @track category = '';
@@ -24,6 +27,56 @@ export default class SurveyBuilder extends LightningElement {
         { label: 'Checkbox', value: 'Checkbox' },
         { label: 'Dropdown', value: 'Dropdown' }
     ];
+
+    connectedCallback() {
+        if (this.surveyId) {
+            this.loadSurvey();
+        }
+    }
+
+    loadSurvey() {
+        getSurveyForPreview({ surveyId: this.surveyId })
+            .then(result => {
+                const { survey, questions } = result;
+                this.surveyTitle = survey.Survey_Name__c;
+                this.surveyDescription = survey.Description__c;
+                this.category = survey.Category__c;
+                this.sections = this.convertQuestionsToSections(questions);
+            })
+            .catch(error => {
+                console.error('❌ Failed to load survey:', error);
+            });
+    }
+
+    convertQuestionsToSections(questions) {
+        const sectionMap = new Map();
+
+        questions.forEach(q => {
+            const sectionName = q.Section__c || 'Default Section';
+            if (!sectionMap.has(sectionName)) {
+                sectionMap.set(sectionName, {
+                    id: this.generateId('section'),
+                    name: sectionName,
+                    questions: []
+                });
+            }
+
+            sectionMap.get(sectionName).questions.push({
+                id: q.Id,
+                label: q.Label__c,
+                type: q.Question_Type__c,
+                required: q.Required__c,
+                allowMultiple: q.Allow_Multiple__c,
+                showToggle: q.Question_Type__c === 'Checkbox',
+                options: q.Options?.map(opt => ({
+                    id: opt.Id,
+                    label: opt.Label__c
+                })) || []
+            });
+        });
+
+        return Array.from(sectionMap.values());
+    }
 
     generateId(prefix) {
         return prefix + '_' + Math.random().toString(36).substring(2, 9);
@@ -252,7 +305,7 @@ export default class SurveyBuilder extends LightningElement {
         return !hasError;
     }
 
-    saveSurvey(status) {
+    /*saveSurvey(status) {
         if (!this.surveyTitle || !this.category) {
             alert('Survey title and category are required.');
             return;
@@ -303,6 +356,67 @@ export default class SurveyBuilder extends LightningElement {
             console.error('❌ Save error:', err);
             this.showToast('Error', err?.body?.message || 'Unexpected error', 'error');
         });
+    }*/
+
+    saveSurvey(status) {
+        if (!this.surveyTitle || !this.category) {
+            alert('Survey title and category are required.');
+            return;
+        }
+
+        if (!this.validateBeforeSave()) {
+            alert('Please fix validation errors before saving.');
+            return;
+        }
+
+        const flatQuestions = [];
+
+        this.sections.forEach((section, sectionIndex) => {
+            if (!section.questions || section.questions.length === 0) return;
+
+            section.questions.forEach((q, questionIndex) => {
+                flatQuestions.push({
+                    Id: q.id && !q.id.startsWith('q_') ? q.id : null,
+                    sectionName: section.name,
+                    questionLabel: q.label,
+                    questionType: q.type,
+                    required: q.required,
+                    allowMultiple: q.allowMultiple || false,
+                    sectionOrder: sectionIndex + 1,
+                    questionOrder: questionIndex + 1,
+                    options: q.options ? q.options.map((opt, i) => ({
+                        Id: opt.id && !opt.id.startsWith('opt_') ? opt.id : null,
+                        label: opt.label,
+                        order: i + 1
+                    })) : []
+                });
+            });
+        });
+
+        console.log('📦 FLATTENED QUESTIONS:', flatQuestions);
+
+        const payload = {
+            title: this.surveyTitle,
+            description: this.surveyDescription,
+            status: status,
+            category: this.category,
+            questionsJSON: JSON.stringify(flatQuestions)
+        };
+
+        const action = this.surveyId
+            ? updateSurvey({ surveyId: this.surveyId, ...payload })
+            : saveSurveyAndQuestions(payload);
+
+        action
+            .then((surveyId) => {
+                console.log('✅ Survey saved with ID:', surveyId);
+                this.showToast('Success', 'Survey saved successfully!', 'success');
+                this.resetForm();
+            })
+            .catch(err => {
+                console.error('❌ Save error:', err);
+                this.showToast('Error', err?.body?.message || 'Unexpected error', 'error');
+            });
     }
 
     handleSaveDraft() {
