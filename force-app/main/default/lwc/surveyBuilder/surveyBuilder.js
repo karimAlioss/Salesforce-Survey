@@ -11,6 +11,7 @@ export default class SurveyBuilder extends LightningElement {
     @track surveyDescription = '';
     @track category = '';
     @track sections = [];
+    @track showSuccessScreen = false;
 
     categoryOptions = [
         { label: 'Customer Feedback', value: 'Customer Feedback' },
@@ -305,59 +306,6 @@ export default class SurveyBuilder extends LightningElement {
         return !hasError;
     }
 
-    /*saveSurvey(status) {
-        if (!this.surveyTitle || !this.category) {
-            alert('Survey title and category are required.');
-            return;
-        }
-
-        if (!this.validateBeforeSave()) {
-            alert('Please fix validation errors before saving.');
-            return;
-        }
-
-        const flatQuestions = [];
-
-        this.sections.forEach((section, sectionIndex) => {
-            if (!section.questions || section.questions.length === 0) return;
-
-            section.questions.forEach((q, questionIndex) => {
-                flatQuestions.push({
-                    sectionName: section.name,
-                    questionLabel: q.label,
-                    questionType: q.type,
-                    required: q.required,
-                    allowMultiple: q.allowMultiple || false,
-                    sectionOrder: sectionIndex + 1,
-                    questionOrder: questionIndex + 1,
-                    options: q.options ? q.options.map((opt, i) => ({
-                        label: opt.label,
-                        order: i + 1
-                    })) : []
-                });
-            });
-        });
-
-        console.log('📦 FLATTENED QUESTIONS:', flatQuestions);
-
-        saveSurveyAndQuestions({
-            title: this.surveyTitle,
-            description: this.surveyDescription,
-            status: status,
-            category: this.category,
-            questionsJSON: JSON.stringify(flatQuestions)
-        })
-        .then((surveyId) => {
-            console.log('✅ Survey saved with ID:', surveyId);
-            this.showToast('Success', 'Survey saved successfully!', 'success');
-            this.resetForm();
-        })
-        .catch(err => {
-            console.error('❌ Save error:', err);
-            this.showToast('Error', err?.body?.message || 'Unexpected error', 'error');
-        });
-    }*/
-
     saveSurvey(status) {
         if (!this.surveyTitle || !this.category) {
             alert('Survey title and category are required.');
@@ -412,6 +360,7 @@ export default class SurveyBuilder extends LightningElement {
                 console.log('✅ Survey saved with ID:', surveyId);
                 this.showToast('Success', 'Survey saved successfully!', 'success');
                 this.resetForm();
+                this.showSuccessScreen = true;
             })
             .catch(err => {
                 console.error('❌ Save error:', err);
@@ -442,5 +391,9 @@ export default class SurveyBuilder extends LightningElement {
                 variant
             })
         );
+    }
+
+    goToDashboard() {
+        window.location.href = '/lightning/n/Survey_Manager';
     }
 }
