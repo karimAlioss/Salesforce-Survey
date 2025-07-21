@@ -3,6 +3,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import updateSurvey from '@salesforce/apex/SurveyController.updateSurvey';
 import getSurveyForPreview from '@salesforce/apex/SurveyController.getSurveyForPreview';
 import saveSurveyAndQuestions from '@salesforce/apex/SurveyController.saveSurveyAndQuestions';
+import getPicklistValues from '@salesforce/apex/SurveyController.getPicklistValues';
 
 export default class SurveyBuilder extends LightningElement {
 
@@ -13,26 +14,32 @@ export default class SurveyBuilder extends LightningElement {
     @track sections = [];
     @track showSuccessScreen = false;
 
-    categoryOptions = [
-        { label: 'Customer Feedback', value: 'Customer Feedback' },
-        { label: 'Employee Feedback', value: 'Employee Feedback' },
-        { label: 'Event', value: 'Event' },
-        { label: 'Market', value: 'Market' },
-        { label: 'Product', value: 'Product' },
-        { label: 'Service Satisfaction', value: 'Service Satisfaction' }
-    ];
-
-    questionTypeOptions = [
-        { label: 'Text', value: 'Text' },
-        { label: 'Radio', value: 'Radio' },
-        { label: 'Checkbox', value: 'Checkbox' },
-        { label: 'Dropdown', value: 'Dropdown' }
-    ];
+    @track categoryOptions = [];
+    @track questionTypeOptions = [];
 
     connectedCallback() {
         if (this.surveyId) {
             this.loadSurvey();
         }
+        this.loadPicklistOptions();
+    }
+
+    loadPicklistOptions() {
+        getPicklistValues({ objectName: 'Survey__c', fieldName: 'Category__c' })
+            .then(data => {
+                this.categoryOptions = data.map(item => ({ label: item, value: item }));
+            })
+            .catch(error => {
+                console.error('Error loading category picklist:', error);
+            });
+
+        getPicklistValues({ objectName: 'Survey_Question__c', fieldName: 'Question_Type__c' })
+            .then(data => {
+                this.questionTypeOptions = data.map(item => ({ label: item, value: item }));
+            })
+            .catch(error => {
+                console.error('Error loading question type picklist:', error);
+            });
     }
 
     loadSurvey() {
@@ -220,7 +227,7 @@ export default class SurveyBuilder extends LightningElement {
                 section.questions = section.questions.map(q => {
                     if (q.id === questionId && q.options !== undefined) {
                         q.options.push({
-                            id: this.generateId('opt'), // ✅ FIXED: ID is now generated
+                            id: this.generateId('opt'),
                             label: ''
                         });
                     }
@@ -341,8 +348,6 @@ export default class SurveyBuilder extends LightningElement {
             });
         });
 
-        console.log('📦 FLATTENED QUESTIONS:', flatQuestions);
-
         const payload = {
             title: this.surveyTitle,
             description: this.surveyDescription,
@@ -357,13 +362,11 @@ export default class SurveyBuilder extends LightningElement {
 
         action
             .then((surveyId) => {
-                console.log('✅ Survey saved with ID:', surveyId);
                 this.showToast('Success', 'Survey saved successfully!', 'success');
                 this.resetForm();
                 this.showSuccessScreen = true;
             })
             .catch(err => {
-                console.error('❌ Save error:', err);
                 this.showToast('Error', err?.body?.message || 'Unexpected error', 'error');
             });
     }

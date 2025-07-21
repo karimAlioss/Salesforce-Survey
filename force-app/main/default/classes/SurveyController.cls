@@ -271,4 +271,28 @@ public with sharing class SurveyController {
             throw new AuraHandledException('Failed to delete survey: ' + e.getMessage());
         }
     }
+    
+    /*************************************Testing The Dynamic Listing /**************************************/
+    @AuraEnabled(cacheable=true)
+    public static List<String> getPicklistValues(String objectName, String fieldName) {
+        List<String> values = new List<String>();
+
+        Schema.SObjectType objType = Schema.getGlobalDescribe().get(objectName);
+        if (objType == null) {
+            throw new AuraHandledException('Invalid object: ' + objectName);
+        }
+
+        Schema.DescribeSObjectResult describeResult = objType.getDescribe();
+        Schema.DescribeFieldResult fieldResult = describeResult.fields.getMap().get(fieldName).getDescribe();
+
+        if (!fieldResult.isAccessible()) {
+            throw new AuraHandledException('Field not accessible: ' + fieldName);
+        }
+
+        for (Schema.PicklistEntry entry : fieldResult.getPicklistValues()) {
+            values.add(entry.getLabel());
+        }
+
+        return values;
+    }
 } 
