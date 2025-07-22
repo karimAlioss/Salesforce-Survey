@@ -69,18 +69,29 @@ export default class SurveyBuilder extends LightningElement {
                 });
             }
 
-            sectionMap.get(sectionName).questions.push({
+            const question = {
                 id: q.Id,
                 label: q.Label__c,
                 type: q.Question_Type__c,
                 required: q.Required__c,
                 allowMultiple: q.Allow_Multiple__c,
                 showToggle: q.Question_Type__c === 'Checkbox',
+
+                isTextArea: q.Question_Type__c === 'Text Area',
+                isNumber: q.Question_Type__c === 'Number',
+                isDate: q.Question_Type__c === 'Date',
+                isTime: q.Question_Type__c === 'Time',
+                isEmail: q.Question_Type__c === 'Email',
+                isPhone: q.Question_Type__c === 'Phone',
+                isInstruction: q.Question_Type__c === 'Instruction',
+
                 options: q.Options?.map(opt => ({
                     id: opt.Id,
                     label: opt.Label__c
                 })) || []
-            });
+            };
+
+            sectionMap.get(sectionName).questions.push(question);
         });
 
         return Array.from(sectionMap.values());
@@ -175,6 +186,14 @@ export default class SurveyBuilder extends LightningElement {
                         q.options = this.isChoiceType(value) ? [] : undefined;
                         q.allowMultiple = false;
                         q.showToggle = value === 'Checkbox';
+
+                        q.isTextArea = value === 'Text Area';
+                        q.isNumber = value === 'Number';
+                        q.isDate = value === 'Date';
+                        q.isTime = value === 'Time';
+                        q.isEmail = value === 'Email';
+                        q.isPhone = value === 'Phone';
+                        q.isInstruction = value === 'Instruction';
                     }
                     return q;
                 });

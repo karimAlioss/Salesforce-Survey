@@ -24,34 +24,41 @@ export default class SurveyPreview extends LightningElement {
 
     loadSurvey() {
         getSurveyForPreview({ surveyId: this.surveyId })
-            .then(result => {
-                this.surveyTitle = result.survey.Survey_Name__c;
-                this.surveyDescription = result.survey.Description__c;
+        .then(result => {
+            this.surveyTitle = result.survey.Survey_Name__c;
+            this.surveyDescription = result.survey.Description__c;
 
-                this.questions = result.questions.map(q => {
-                    const type = q.Question_Type__c;
-                    const options = q.Options || [];
-                    return {
-                        id: q.Id,
-                        label: q.Label__c,
-                        type: type,
-                        required: q.Required__c,
-                        allowMultiple: q.Allow_Multiple__c,
-                        order: q.Order__c,
-                        options: options,
-                        dropdownOptions: options.map(o => ({
-                            label: o.Label__c,
-                            value: o.Label__c
-                        })),
-                        isText: type === 'Text',
-                        isRadio: type === 'Radio',
-                        isCheckbox: type === 'Checkbox',
-                        isDropdown: type === 'Dropdown'
-                    };
-                });
-            })
-            .catch(error => {
-                console.error('❌ Failed to load survey preview:', error);
+            this.questions = result.questions.map(q => {
+                const type = q.Question_Type__c;
+                const options = q.Options || [];
+                return {
+                    id: q.Id,
+                    label: q.Label__c,
+                    type: type,
+                    required: q.Required__c,
+                    allowMultiple: q.Allow_Multiple__c,
+                    order: q.Order__c,
+                    options: options,
+                    dropdownOptions: options.map(o => ({
+                        label: o.Label__c,
+                        value: o.Label__c
+                    })),
+                    isText: type === 'Text',
+                    isTextArea: type === 'Text Area',
+                    isNumber: type === 'Number',
+                    isDate: type === 'Date',
+                    isTime: type === 'Time',
+                    isEmail: type === 'Email',
+                    isPhone: type === 'Phone',
+                    isInstruction: type === 'Instruction',
+                    isRadio: type === 'Radio',
+                    isCheckbox: type === 'Checkbox',
+                    isDropdown: type === 'Dropdown'
+                };
             });
+        })
+        .catch(error => {
+            console.error('❌ Failed to load survey preview:', error);
+        });
     }
 }

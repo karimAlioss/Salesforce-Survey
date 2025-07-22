@@ -17,6 +17,34 @@
                         <lightning-input type="text" class="slds-m-top_xx-small"></lightning-input>
                     </template>
 
+                    <template if:true={question.isTextArea}>
+                        <lightning-textarea class="slds-m-top_xx-small"></lightning-textarea>
+                    </template>
+
+                    <template if:true={question.isNumber}>
+                        <lightning-input type="number" class="slds-m-top_xx-small"></lightning-input>
+                    </template>
+
+                    <template if:true={question.isDate}>
+                        <lightning-input type="date" class="slds-m-top_xx-small"></lightning-input>
+                    </template>
+
+                    <template if:true={question.isTime}>
+                        <lightning-input type="time" class="slds-m-top_xx-small"></lightning-input>
+                    </template>
+
+                    <template if:true={question.isEmail}>
+                        <lightning-input type="email" class="slds-m-top_xx-small"></lightning-input>
+                    </template>
+
+                    <template if:true={question.isPhone}>
+                        <lightning-input type="tel" class="slds-m-top_xx-small"></lightning-input>
+                    </template>
+
+                    <template if:true={question.isInstruction}>
+                        <p class="slds-text-title_bold slds-p-vertical_xx-small">{question.label}</p>
+                    </template>
+
                     <template if:true={question.isRadio}>
                         <template for:each={question.options} for:item="opt">
                             <div key={opt.Id} class="slds-m-top_xx-small">
