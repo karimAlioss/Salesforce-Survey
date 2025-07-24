@@ -1,7 +1,16 @@
 <template>
     <lightning-card>
         <div class="dashboard-container">
-            
+
+            <!-- 🔄 Spinner Overlay -->
+            <template if:true={isLoading}>
+                <lightning-spinner
+                    alternative-text="Loading..."
+                    size="medium"
+                    variant="brand">
+                </lightning-spinner>
+            </template>
+
             <!-- 🔹 Header -->
             <div class="dashboard-header slds-grid slds-grid_align-spread slds-m-bottom_medium">
                 <h2 class="slds-text-heading_medium">My Surveys</h2>

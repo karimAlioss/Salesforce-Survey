@@ -1,77 +1,118 @@
-.survey-header {
-   padding: 1rem;
-   background-color: #f4f6f9;
-   margin-bottom: 1rem;
-   border-bottom: 1px solid #ddd;
+/* ========================
+   LAYOUT CONTAINERS
+======================== */
+
+.builder-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+    background-color: #f8f9fb;
 }
 
-.section-box {
-   margin: 1rem;
-   border: 1px solid #d9d9d9;
-   border-radius: 8px;
-   padding: 1rem;
-   background-color: #ffffff;
-   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+/* 🔴 Header - Survey Title, Description, Category */
+.builder-header {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.section-header {
-   display: flex;
-   justify-content: space-between;
-   align-items: center;
-   border-bottom: 1px solid #eee;
-   padding-bottom: 0.5rem;
+/* 🟢 Body - Sections + Questions */
+.builder-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
-.section-actions {
-   display: flex;
-   gap: 0.5rem;
-}
-
-.question-card {
-   padding: 1rem;
-   margin: 0.75rem 0;
-   background-color: #f9f9f9;
-   border: 1px solid #e0e0e0;
-   border-radius: 6px;
-   display: flex;
-   flex-direction: column;
-   position: relative;
-   cursor: grab;
-   transition: border 0.2s ease;
-}
-
-.question-card.drag-over {
-   border: 2px dashed #0070d2;
-   background-color: #e8f4fd;
-}
-
-.drag-handle {
-   position: absolute;
-   top: 0.5rem;
-   right: 0.5rem;
-   font-size: 18px;
-   opacity: 0.4;
-   cursor: grab;
-}
-
+/* 🟣 Footer - Bottom action buttons */
 .builder-footer {
-   padding: 1rem;
-   text-align: right;
-   border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1rem 0 0;
+    border-top: 1px solid #e4e4e4;
 }
 
-/* ✅ Verified custom red delete icon with hover zoom */
-.delete-wrapper lightning-button-icon {
-   --slds-c-icon-color-foreground: #c23934;
-   --slds-c-icon-color-background: transparent;
-   transition: transform 0.2s ease;
+
+/* ========================
+   SECTION STYLING
+======================== */
+
+.builder-section {
+    background-color: #fff;
+    border: 1px solid #e4e4e4;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.delete-wrapper lightning-button-icon:hover {
-   transform: scale(1.15);
-   background-color: rgba(194, 57, 52, 0.1);
-   border-radius: 50%;
+.builder-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
+
+/* ========================
+   QUESTION STYLING
+======================== */
+
+.builder-question {
+    background-color: #fdfdfd;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* ========================
+   OPTIONS STYLING
+======================== */
+
+.builder-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.builder-option-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* ========================
+   BUTTON STYLES
+======================== */
+
+.publish-btn {
+    --slds-c-button-brand-color-background: #9776ff;
+    --slds-c-button-brand-color-border: #9776ff;
+    --slds-c-button-brand-color-background-hover: #7b5fe0;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+.draft-btn {
+    --slds-c-button-text-color: #333;
+    --slds-c-button-color-border: #ccc;
+    border: 1px solid #ccc;
+    background: #f4f4f4;
+    border-radius: 6px;
+}
+
+/* ========================
+   SUCCESS SCREEN (intact)
+======================== */
 
 .success-screen {
     background-color: #f3f3f3;
@@ -106,6 +147,10 @@
     color: #333;
     margin-bottom: 2rem;
 }
+
+/* ========================
+   ANIMATIONS
+======================== */
 
 @keyframes popIn {
     from {

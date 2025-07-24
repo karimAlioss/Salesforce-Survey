@@ -418,4 +418,41 @@ export default class SurveyBuilder extends LightningElement {
     goToDashboard() {
         window.location.href = '/lightning/n/Survey_Manager';
     }
+
+    handleDragStart(event) {
+        const sectionId = event.currentTarget.dataset.sectionId;
+        const questionId = event.currentTarget.dataset.questionId;
+        event.dataTransfer.setData('text/plain', JSON.stringify({ sectionId, questionId }));
+    }
+
+    handleDragOver(event) {
+        event.preventDefault();
+    }
+
+    handleDrop(event) {
+        event.preventDefault();
+        const from = JSON.parse(event.dataTransfer.getData('text/plain'));
+        const toSectionId = event.currentTarget.dataset.sectionId;
+        const toQuestionId = event.currentTarget.dataset.questionId;
+
+        if (from.sectionId !== toSectionId) return;
+
+        this.sections = this.sections.map(section => {
+            if (section.id !== toSectionId) return section;
+
+            const draggedIndex = section.questions.findIndex(q => q.id === from.questionId);
+            const dropIndex = section.questions.findIndex(q => q.id === toQuestionId);
+
+            if (draggedIndex === -1 || dropIndex === -1 || draggedIndex === dropIndex) return section;
+
+            const updatedQuestions = [...section.questions];
+            const [movedQuestion] = updatedQuestions.splice(draggedIndex, 1);
+            updatedQuestions.splice(dropIndex, 0, movedQuestion);
+
+            // Optionally update questionOrder right away
+            updatedQuestions.forEach((q, i) => q.questionOrder = i + 1);
+
+            return { ...section, questions: updatedQuestions };
+        });
+    }
 }
