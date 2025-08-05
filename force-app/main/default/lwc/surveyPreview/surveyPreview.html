@@ -14,31 +14,65 @@
                     </label>
 
                     <template if:true={question.isText}>
-                        <lightning-input type="text" class="slds-m-top_xx-small"></lightning-input>
+                        <lightning-input
+                            type="text"
+                            class="slds-m-top_xx-small"
+                            data-question-id={question.id}
+                            onchange={handleInputChange}>
+                        </lightning-input>
                     </template>
 
                     <template if:true={question.isTextArea}>
-                        <lightning-textarea class="slds-m-top_xx-small"></lightning-textarea>
+                        <lightning-textarea
+                            class="slds-m-top_xx-small"
+                            data-question-id={question.id}
+                            onchange={handleInputChange}>
+                        </lightning-textarea>
                     </template>
 
                     <template if:true={question.isNumber}>
-                        <lightning-input type="number" class="slds-m-top_xx-small"></lightning-input>
+                        <lightning-input
+                            type="number"
+                            class="slds-m-top_xx-small"
+                            data-question-id={question.id}
+                            onchange={handleInputChange}>
+                        </lightning-input>
                     </template>
 
                     <template if:true={question.isDate}>
-                        <lightning-input type="date" class="slds-m-top_xx-small"></lightning-input>
+                        <lightning-input
+                            type="date"
+                            class="slds-m-top_xx-small"
+                            data-question-id={question.id}
+                            onchange={handleInputChange}>
+                        </lightning-input>
                     </template>
 
                     <template if:true={question.isTime}>
-                        <lightning-input type="time" class="slds-m-top_xx-small"></lightning-input>
+                        <lightning-input
+                            type="time"
+                            class="slds-m-top_xx-small"
+                            data-question-id={question.id}
+                            onchange={handleInputChange}>
+                        </lightning-input>
                     </template>
 
                     <template if:true={question.isEmail}>
-                        <lightning-input type="email" class="slds-m-top_xx-small"></lightning-input>
+                        <lightning-input
+                            type="email"
+                            class="slds-m-top_xx-small"
+                            data-question-id={question.id}
+                            onchange={handleInputChange}>
+                        </lightning-input>
                     </template>
 
                     <template if:true={question.isPhone}>
-                        <lightning-input type="tel" class="slds-m-top_xx-small"></lightning-input>
+                        <lightning-input
+                            type="tel"
+                            class="slds-m-top_xx-small"
+                            data-question-id={question.id}
+                            onchange={handleInputChange}>
+                        </lightning-input>
                     </template>
 
                     <template if:true={question.isInstruction}>
@@ -48,7 +82,14 @@
                     <template if:true={question.isRadio}>
                         <template for:each={question.options} for:item="opt">
                             <div key={opt.Id} class="slds-m-top_xx-small">
-                                <lightning-input type="radio" name={question.id} label={opt.Label__c}></lightning-input>
+                                <lightning-input
+                                    type="radio"
+                                    name={question.id}
+                                    label={opt.Label__c}
+                                    value={opt.Label__c}
+                                    data-question-id={question.id}
+                                    onchange={handleInputChange}>
+                                </lightning-input>
                             </div>
                         </template>
                     </template>
@@ -56,7 +97,13 @@
                     <template if:true={question.isCheckbox}>
                         <template for:each={question.options} for:item="opt">
                             <div key={opt.Id} class="slds-m-top_xx-small">
-                                <lightning-input type="checkbox" label={opt.Label__c}></lightning-input>
+                                <lightning-input
+                                    type="checkbox"
+                                    label={opt.Label__c}
+                                    data-question-id={question.id}
+                                    data-option-value={opt.Label__c}
+                                    onchange={handleCheckboxChange}>
+                                </lightning-input>
                             </div>
                         </template>
                     </template>
@@ -65,11 +112,20 @@
                         <lightning-combobox
                             class="slds-m-top_xx-small"
                             options={question.dropdownOptions}
-                            placeholder="Select an option">
+                            data-question-id={question.id}
+                            placeholder="Select an option"
+                            onchange={handleInputChange}>
                         </lightning-combobox>
                     </template>
                 </div>
             </template>
         </template>
+
+        <lightning-button
+            label="Submit"
+            variant="brand"
+            class="slds-m-top_medium"
+            onclick={handleSubmit}>
+        </lightning-button>
     </div>
 </template>

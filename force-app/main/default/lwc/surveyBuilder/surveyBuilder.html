@@ -21,8 +21,6 @@
 
     <template if:false={showSuccessScreen}>
         <div class="builder-container">
-
-            <!-- 🔴 Red Zone: Survey Info -->
             <div class="builder-header">
                 <lightning-input
                     label="Survey Title"
@@ -44,7 +42,6 @@
                 </lightning-combobox>
             </div>
 
-            <!-- 🟢 Green Zone: Sections + Questions -->
             <div class="builder-body">
                 <template for:each={sections} for:item="section">
                     <div key={section.id} class="builder-section">
@@ -64,7 +61,6 @@
                             </lightning-button-icon>
                         </div>
 
-                        <!-- QUESTIONS -->
                         <template for:each={section.questions} for:item="q">
                             <div key={q.id} class="builder-question" draggable="true"
                                 data-section-id={section.id}
@@ -72,6 +68,8 @@
                                 ondragstart={handleDragStart}
                                 ondragover={handleDragOver}
                                 ondrop={handleDrop}>
+
+                                <div class="drag-handle" title="Drag to reorder">⠿</div>
 
                                 <lightning-input
                                     label="Question Label"
@@ -110,7 +108,6 @@
                                     </lightning-input>
                                 </template>
 
-                                <!-- OPTIONS -->
                                 <template if:true={q.options}>
                                     <div class="builder-options">
                                         <template for:each={q.options} for:item="opt">
@@ -173,7 +170,6 @@
                 </lightning-button>
             </div>
 
-            <!-- 🟣 Purple Zone: Bottom Buttons -->
             <div class="builder-footer">
                 <lightning-button
                     label="Save to Draft"
