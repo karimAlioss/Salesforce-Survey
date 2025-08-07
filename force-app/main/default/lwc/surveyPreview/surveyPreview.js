@@ -8,7 +8,7 @@ export default class SurveyPreview extends LightningElement {
     @track surveyTitle = '';
     @track surveyDescription = '';
     @track questions = [];
-    answersMap = new Map(); // { questionId -> answer string or array }
+    answersMap = new Map();
 
     @wire(CurrentPageReference)
     getStateParameters(currentPageReference) {
@@ -56,7 +56,7 @@ export default class SurveyPreview extends LightningElement {
                 });
             })
             .catch(error => {
-                console.error('Failed to load survey:', error);
+                console.error('❌ Failed to load survey:', error);
             });
     }
 
@@ -81,12 +81,32 @@ export default class SurveyPreview extends LightningElement {
     }
 
     handleSubmit() {
-        const answers = [];
+        console.log('🧠 Submitting survey answers...');
+        console.log('Survey ID:', this.surveyId);
+
+        let respondentName = '';
+        let respondentEmail = '';
+        const sentiment = null; 
+
+        const filteredAnswers = [];
 
         for (const q of this.questions) {
             const value = this.answersMap.get(q.id);
+
+            if (q.label.toLowerCase().includes('name')) {
+                respondentName = value || '';
+                continue;
+            }
+
+            console.log('🔍 Checking question label:', q.label);
+
+            if (q.type === 'Email') {
+                respondentEmail = value || '';
+                continue;
+            }
+
             if ((value !== undefined && value !== null && value !== '') || q.isCheckbox) {
-                answers.push({
+                filteredAnswers.push({
                     questionId: q.id,
                     answer: Array.isArray(value) ? value.join('; ') : value,
                     type: q.type
@@ -97,23 +117,24 @@ export default class SurveyPreview extends LightningElement {
             }
         }
 
-        // For now: hardcoded dummy name and sentiment
-        const respondentName = 'Anonymous Tester';
-        const sentiment = 'Neutral';
+        console.log('Respondent Name:', respondentName);
+        console.log('Respondent Email:', respondentEmail);
+        console.log('Answers JSON:', JSON.stringify(filteredAnswers));
 
         submitSurveyAnswers({
             surveyId: this.surveyId,
             respondentName: respondentName,
-            sentiment: sentiment,
-            answersJSON: JSON.stringify(answers)
+            respondentEmail: respondentEmail,
+            sentiment,
+            answersJSON: JSON.stringify(filteredAnswers)
         })
-        .then(() => {
-            alert('Thank you! Your answers were submitted.');
-        })
-        .catch(error => {
-            console.error('Failed to submit answers:', error);
-            alert('Error submitting survey.');
-        });
+            .then(() => {
+                alert('✅ Thank you! Your answers were submitted.');
+                console.log('✅ Survey submission success!');
+            })
+            .catch(error => {
+                console.error('❌ Failed to submit answers:', error);
+                alert('❌ Error submitting survey. Check console for details.');
+            });
     }
-
 }
