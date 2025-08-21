@@ -19,7 +19,8 @@ public with sharing class SurveyController {
                     Survey_Name__c = title,
                     Description__c = description,
                     Status__c = status,
-                    Category__c = category
+                    Category__c = category,
+                    Published_Date__c = status == 'Published' ? DateTime.now() : null
                 );
                 insert survey;
             } catch (Exception e) {
@@ -103,11 +104,14 @@ public with sharing class SurveyController {
 
         List<QuestionDTO> questionDTOs = (List<QuestionDTO>) JSON.deserialize(questionsJSON, List<QuestionDTO>.class);
 
-        Survey__c survey = [SELECT Id FROM Survey__c WHERE Id = :surveyId];
+        Survey__c survey = [SELECT Id, Published_Date__c FROM Survey__c WHERE Id = :surveyId];
         survey.Name = title;
         survey.Survey_Name__c = title;
         survey.Description__c = description;
         survey.Status__c = status;
+        if (status == 'Published' && survey.Published_Date__c == null) {
+            survey.Published_Date__c = DateTime.now();
+        }
         survey.Category__c = category;
         update survey;
 
@@ -299,7 +303,7 @@ public with sharing class SurveyController {
     @AuraEnabled(cacheable=true)
     public static List<Survey__c> getPublishedSurveys() {
         return [
-            SELECT Id, Survey_Name__c, Description__c
+            SELECT Id, Survey_Name__c, Description__c, Published_Date__c, Category__c
             FROM Survey__c
             WHERE Status__c = 'Published'
             ORDER BY Published_Date__c DESC

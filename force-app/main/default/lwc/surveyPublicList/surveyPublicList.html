@@ -1,31 +1,25 @@
 <template>
-    <lightning-card title="Available Surveys">
-        <template if:true={surveys}>
-            <div class="slds-grid slds-wrap slds-p-around_medium">
-                <template for:each={surveys} for:item="survey">
-                    <div key={survey.Id} class="slds-col slds-size_1-of-2 slds-p-around_small">
-                        <div class="slds-box slds-box_x-small slds-theme_default">
-                            <h3 class="slds-text-heading_small">{survey.Survey_Name__c}</h3>
-                            <p class="slds-text-body_small slds-m-vertical_x-small">
-                                {survey.Description__c}
-                            </p>
-                            <lightning-button 
-                                label="Take Survey" 
-                                data-id={survey.Id}
-                                onclick={handleSurveyClick}
-                                variant="brand"
-                                class="slds-m-top_small">
-                            </lightning-button>
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </template>
+  <div class="grid">
+    <template for:each={surveys} for:item="survey">
+      <div key={survey.Id} class="card">
+        <div class="survey-icon-container">
+            <svg class="custom-svg-icon" clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2"
+                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                d="m11.6 11c0-.552-.448-1-1-1-1.655 0-4.945 0-6.6 0-.552 0-1 .448-1 1v9c0 .552.448 1 1 1h6.6c.552 0 1-.448 1-1 0-2.092 0-6.908 0-9zm9.4 6c0-.552-.448-1-1-1h-6c-.538 0-1 .477-1 1v3c0 .552.448 1 1 1h6c.552 0 1-.448 1-1zm0-13c0-.552-.448-1-1-1-1.537 0-4.463 0-6 0-.552 0-1 .448-1 1v9.6c0 .552.448 1 1 1h6c.552 0 1-.448 1-1 0-2.194 0-7.406 0-9.6zm-9.4 0c0-.552-.448-1-1-1-1.655 0-4.945 0-6.6 0-.552 0-1 .448-1 1v3.6c0 .552.448 1 1 1h6.6c.552 0 1-.448 1-1 0-1.017 0-2.583 0-3.6z"
+                fill="#ffffff" />
+            </svg>
+        </div>  
+        <h4>{survey.Survey_Name__c}</h4>
+        <p>{survey.Description__c}</p>
 
-        <template if:true={error}>
-            <div class="slds-text-color_error slds-p-around_medium">
-                Error loading surveys.
-            </div>
-        </template>
-    </lightning-card>
+        <div class="tags">
+            <p class="tag date-tag">📅 {survey.Published_Date__c}</p>
+            <p class="tag category-tag">📂 {survey.Category__c}</p>
+        </div>
+
+        <button class="take-button" onclick={handleTakeSurvey} data-id={survey.Id}>Take Survey</button>
+      </div>
+    </template>
+  </div>
 </template>

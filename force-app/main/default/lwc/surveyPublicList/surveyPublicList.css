@@ -1,0 +1,100 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 32px;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.card {
+  background: #ffffff;
+  color: #1a1a1a;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  border-radius: 16px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.survey-icon-container {
+  background-color: #7b5fe0;
+  padding: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.custom-svg-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  fill: #ffffff;
+}
+
+.card h4 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0.75rem 0 0.4rem 0;
+}
+
+.card p {
+  font-size: 14px;
+  margin: 0.3rem 0;
+  line-height: 1.5;
+}
+
+/* Tag-like meta styles */
+.card .meta {
+  display: inline-block;
+  background-color: #f2f2f2;
+  color: #333;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+/* CTA Button */
+.card .take-button {
+  margin-top: 1.2rem;
+  background: #7b5fe0;
+  color: #ffffff;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.card .take-button:hover {
+  background: #684bcc;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px 10px;
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  background-color: #f0f0f0;
+}
+
+.date-tag {
+  background-color: #e3f2fd; /* light blue */
+  color: #1565c0;
+}
+
+.category-tag {
+  background-color: #f3e5f5; /* light purple */
+  color: #7b1fa2;
+}

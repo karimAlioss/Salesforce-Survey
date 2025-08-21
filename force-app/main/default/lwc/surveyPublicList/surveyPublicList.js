@@ -1,27 +1,33 @@
-import { LightningElement, wire } from 'lwc';
+import { LightningElement, wire, track } from 'lwc';
 import getPublishedSurveys from '@salesforce/apex/SurveyController.getPublishedSurveys';
 import { NavigationMixin } from 'lightning/navigation';
 
 export default class SurveyPublicList extends NavigationMixin(LightningElement) {
-    surveys = [];
-    error;
+    @track surveys = [];
 
     @wire(getPublishedSurveys)
-    wiredSurveys({ data, error }) {
+    wiredSurveys({ error, data }) {
         if (data) {
-            this.surveys = data;
-        } else if (error) {
-            this.error = error;
-            console.error('Error fetching surveys:', error);
+            this.surveys = data.map(s => ({
+                ...s,
+                Published_Date__c: s.Published_Date__c
+                    ? new Date(s.Published_Date__c).toLocaleDateString()
+                    : 'Not Set'
+            }));
+        } else {
+            console.error('Error fetching surveys', error);
         }
     }
 
-    handleSurveyClick(event) {
+    handleTakeSurvey(event) {
         const surveyId = event.currentTarget.dataset.id;
         this[NavigationMixin.Navigate]({
-            type: 'standard__webPage',
+            type: 'standard__component',
             attributes: {
-                url: `/survey-preview?c__surveyid=${surveyId}`
+                componentName: 'c__SurveyPreviewWrapper'
+            },
+            state: {
+                c__surveyId: surveyId
             }
         });
     }
