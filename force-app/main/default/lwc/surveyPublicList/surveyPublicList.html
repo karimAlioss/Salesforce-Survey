@@ -1,0 +1,31 @@
+<template>
+    <lightning-card title="Available Surveys">
+        <template if:true={surveys}>
+            <div class="slds-grid slds-wrap slds-p-around_medium">
+                <template for:each={surveys} for:item="survey">
+                    <div key={survey.Id} class="slds-col slds-size_1-of-2 slds-p-around_small">
+                        <div class="slds-box slds-box_x-small slds-theme_default">
+                            <h3 class="slds-text-heading_small">{survey.Survey_Name__c}</h3>
+                            <p class="slds-text-body_small slds-m-vertical_x-small">
+                                {survey.Description__c}
+                            </p>
+                            <lightning-button 
+                                label="Take Survey" 
+                                data-id={survey.Id}
+                                onclick={handleSurveyClick}
+                                variant="brand"
+                                class="slds-m-top_small">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <template if:true={error}>
+            <div class="slds-text-color_error slds-p-around_medium">
+                Error loading surveys.
+            </div>
+        </template>
+    </lightning-card>
+</template>

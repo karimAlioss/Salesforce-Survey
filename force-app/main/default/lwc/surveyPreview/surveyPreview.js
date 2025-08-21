@@ -1,5 +1,6 @@
 import { LightningElement, track, wire } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getSurveyForPreview from '@salesforce/apex/SurveyController.getSurveyForPreview';
 import submitSurveyAnswers from '@salesforce/apex/SurveyAnswerController.submitAnswers';
 
@@ -8,6 +9,9 @@ export default class SurveyPreview extends LightningElement {
     @track surveyTitle = '';
     @track surveyDescription = '';
     @track questions = [];
+    @track showSuccessScreen = false;
+    @track isSubmitting = false;
+    
     answersMap = new Map();
 
     @wire(CurrentPageReference)
@@ -56,7 +60,7 @@ export default class SurveyPreview extends LightningElement {
                 });
             })
             .catch(error => {
-                console.error('❌ Failed to load survey:', error);
+                console.error('Failed to load survey:', error);
             });
     }
 
@@ -81,13 +85,11 @@ export default class SurveyPreview extends LightningElement {
     }
 
     handleSubmit() {
-        console.log('🧠 Submitting survey answers...');
-        console.log('Survey ID:', this.surveyId);
+        this.isSubmitting = true;
 
         let respondentName = '';
         let respondentEmail = '';
-        const sentiment = null; 
-
+        const sentiment = null;
         const filteredAnswers = [];
 
         for (const q of this.questions) {
@@ -97,8 +99,6 @@ export default class SurveyPreview extends LightningElement {
                 respondentName = value || '';
                 continue;
             }
-
-            console.log('🔍 Checking question label:', q.label);
 
             if (q.type === 'Email') {
                 respondentEmail = value || '';
@@ -112,14 +112,18 @@ export default class SurveyPreview extends LightningElement {
                     type: q.type
                 });
             } else if (q.required) {
-                alert(`Please answer required question: ${q.label}`);
+                this.isSubmitting = false;
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Missing Required Field',
+                        message: `Please answer required question`,
+                        variant: 'error',
+                        mode: 'dismissable'
+                    })
+                );
                 return;
             }
         }
-
-        console.log('Respondent Name:', respondentName);
-        console.log('Respondent Email:', respondentEmail);
-        console.log('Answers JSON:', JSON.stringify(filteredAnswers));
 
         submitSurveyAnswers({
             surveyId: this.surveyId,
@@ -129,12 +133,20 @@ export default class SurveyPreview extends LightningElement {
             answersJSON: JSON.stringify(filteredAnswers)
         })
             .then(() => {
-                alert('✅ Thank you! Your answers were submitted.');
-                console.log('✅ Survey submission success!');
+                this.isSubmitting = false;
+                this.showSuccessScreen = true;
             })
             .catch(error => {
-                console.error('❌ Failed to submit answers:', error);
-                alert('❌ Error submitting survey. Check console for details.');
+                this.isSubmitting = false;
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Error',
+                    message: error?.body?.message || 'Error submitting survey.',
+                    variant: 'error'
+                }));
+                console.error('Failed to submit answers:', error);
             });
+    }
+    goToHome() {
+        window.location.href = '/lightning/n/Survey_Manager';
     }
 }

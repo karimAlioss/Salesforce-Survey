@@ -220,7 +220,7 @@ public with sharing class SurveyController {
     public static Map<String, Object> getSurveyForPreview(Id surveyId) {
         try {
             Survey__c survey = [
-                SELECT Id, Survey_Name__c, Description__c,
+                SELECT Id, Survey_Name__c, Description__c, Category__c,
                        (SELECT Id, Label__c, Question_Type__c, Required__c, Order__c, Allow_Multiple__c,
                                (SELECT Id, Label__c, Order__c FROM Survey_Options__r ORDER BY Order__c ASC)
                         FROM Survey_Questions__r ORDER BY Order__c ASC)
@@ -295,4 +295,15 @@ public with sharing class SurveyController {
 
         return values;
     }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Survey__c> getPublishedSurveys() {
+        return [
+            SELECT Id, Survey_Name__c, Description__c
+            FROM Survey__c
+            WHERE Status__c = 'Published'
+            ORDER BY Published_Date__c DESC
+        ];
+    }
+
 } 

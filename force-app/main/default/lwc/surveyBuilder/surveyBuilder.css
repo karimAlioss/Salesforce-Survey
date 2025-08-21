@@ -10,7 +10,6 @@
     background-color: #f8f9fb;
 }
 
-/* 🔴 Header - Survey Title, Description, Category */
 .builder-header {
     background-color: #fff;
     padding: 2rem;
@@ -21,14 +20,12 @@
     gap: 1rem;
 }
 
-/* 🟢 Body - Sections + Questions */
 .builder-body {
     display: flex;
     flex-direction: column;
     gap: 2rem;
 }
 
-/* 🟣 Footer - Bottom action buttons */
 .builder-footer {
     display: flex;
     justify-content: flex-end;
