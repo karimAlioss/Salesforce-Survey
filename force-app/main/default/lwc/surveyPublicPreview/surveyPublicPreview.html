@@ -1,0 +1,101 @@
+<template>
+    <!-- ✅ Thank You Screen -->
+    <template if:true={showSuccessScreen}>
+        <div class="success-screen">
+            <lightning-icon icon-name="utility:success" size="large" variant="inverse"></lightning-icon>
+            <h1 class="success-title">Thank you!</h1>
+            <p class="success-text">Your responses have been submitted.</p>
+            <lightning-button label="Back to Home" variant="brand" onclick={goToHome}></lightning-button>
+        </div>
+    </template>
+
+    <!-- ✅ Survey Form -->
+    <template if:false={showSuccessScreen}>
+        <div class="survey-container">
+            <h2 class="slds-text-heading_medium">{surveyTitle}</h2>
+            <p class="slds-text-body_regular slds-m-bottom_medium">{surveyDescription}</p>
+            <div class="slds-align_absolute-center">
+                <p class="category-tag">{surveyCategory}</p>
+            </div>
+
+
+            <template for:each={sectionedQuestions} for:item="section">
+                <div key={section.sectionName} class="survey-section">
+                    <h3 class="slds-text-title_bold slds-m-bottom_small">{section.sectionName}</h3>
+
+                    <template for:each={section.questions} for:item="question">
+                        <div key={question.id} class="slds-m-bottom_medium">
+                            <label class="slds-form-element__label">
+                                {question.order}. {question.label}
+                                <template if:true={question.required}>
+                                    <abbr title="required">*</abbr>
+                                </template>
+                            </label>
+
+                            <template if:true={question.isText}>
+                                <lightning-input type="text" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
+                            </template>
+                            <template if:true={question.isTextArea}>
+                                <lightning-textarea data-question-id={question.id} onchange={handleInputChange}></lightning-textarea>
+                            </template>
+                            <template if:true={question.isEmail}>
+                                <lightning-input type="email" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
+                            </template>
+                            <template if:true={question.isPhone}>
+                                <lightning-input type="tel" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
+                            </template>
+                            <template if:true={question.isNumber}>
+                                <lightning-input type="number" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
+                            </template>
+                            <template if:true={question.isDate}>
+                                <lightning-input type="date" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
+                            </template>
+                            <template if:true={question.isTime}>
+                                <lightning-input type="time" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
+                            </template>
+                            <template if:true={question.isInstruction}>
+                                <p class="slds-text-title_bold slds-p-vertical_xx-small">{question.label}</p>
+                            </template>
+                            <template if:true={question.isRadio}>
+                                <lightning-radio-group
+                                    name={question.id}
+                                    data-question-id={question.id}
+                                    options={question.dropdownOptions}
+                                    type="radio"
+                                    onchange={handleInputChange}>
+                                </lightning-radio-group>
+                            </template>
+                            <template if:true={question.isCheckbox}>
+                                <template for:each={question.options} for:item="opt">
+                                    <lightning-input
+                                        key={opt.Id}
+                                        type="checkbox"
+                                        label={opt.Label__c}
+                                        data-question-id={question.id}
+                                        data-option-value={opt.Label__c}
+                                        onchange={handleCheckboxChange}>
+                                    </lightning-input>
+                                </template>
+                            </template>
+                            <template if:true={question.isDropdown}>
+                                <lightning-combobox
+                                    options={question.dropdownOptions}
+                                    data-question-id={question.id}
+                                    placeholder="Select an option"
+                                    onchange={handleInputChange}>
+                                </lightning-combobox>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <lightning-button
+                label="Submit"
+                variant="brand"
+                class="slds-m-top_medium"
+                onclick={handleSubmit}>
+            </lightning-button>
+        </div>
+    </template>
+</template>

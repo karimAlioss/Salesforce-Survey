@@ -225,7 +225,7 @@ public with sharing class SurveyController {
         try {
             Survey__c survey = [
                 SELECT Id, Survey_Name__c, Description__c, Category__c,
-                       (SELECT Id, Label__c, Question_Type__c, Required__c, Order__c, Allow_Multiple__c,
+                       (SELECT Id, Label__c, Question_Type__c, Required__c, Order__c, Allow_Multiple__c, Section__c,
                                (SELECT Id, Label__c, Order__c FROM Survey_Options__r ORDER BY Order__c ASC)
                         FROM Survey_Questions__r ORDER BY Order__c ASC)
                 FROM Survey__c
@@ -242,6 +242,7 @@ public with sharing class SurveyController {
                     'Required__c' => q.Required__c,
                     'Order__c' => q.Order__c,
                     'Allow_Multiple__c' => q.Allow_Multiple__c,
+                    'Section__c' => q.Section__c,
                     'Options' => q.Survey_Options__r
                 });
             }

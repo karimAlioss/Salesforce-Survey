@@ -22,12 +22,12 @@ export default class SurveyPublicList extends NavigationMixin(LightningElement) 
     handleTakeSurvey(event) {
         const surveyId = event.currentTarget.dataset.id;
         this[NavigationMixin.Navigate]({
-            type: 'standard__component',
+            type: 'comm__namedPage',
             attributes: {
-                componentName: 'c__SurveyPreviewWrapper'
+                name: 'Survey_Preview__c'
             },
             state: {
-                c__surveyId: surveyId
+                c__surveyid: surveyId
             }
         });
     }
