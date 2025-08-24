@@ -135,7 +135,6 @@ export default class SurveyPublicPreview extends LightningElement {
     handleSubmit() {
         this.isSubmitting = true;
 
-        // ✅ Block submit if any phone is invalid
         const phoneInputs = this.template.querySelectorAll('lightning-input[data-input="phone"]');
         for (const el of phoneInputs) {
             if (!this.validatePhoneInput(el)) {

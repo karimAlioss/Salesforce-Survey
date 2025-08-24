@@ -1,5 +1,4 @@
 <template>
-    <!-- ✅ Thank You Screen -->
     <template if:true={showSuccessScreen}>
         <div class="success-screen">
             <lightning-icon icon-name="utility:success" size="large" variant="inverse"></lightning-icon>
@@ -9,7 +8,6 @@
         </div>
     </template>
 
-    <!-- ✅ Survey Form -->
     <template if:false={showSuccessScreen}>
         <div class="survey-container">
             <h2 class="slds-text-heading_medium">{surveyTitle}</h2>
@@ -43,7 +41,6 @@
                                 <lightning-input type="email" data-question-id={question.id} onchange={handleInputChange} onblur={reportTargetValidity}></lightning-input>
                             </template>
 
-                            <!-- ✅ Phone with custom validation -->
                             <template if:true={question.isPhone}>
                                 <lightning-input
                                     type="tel"
