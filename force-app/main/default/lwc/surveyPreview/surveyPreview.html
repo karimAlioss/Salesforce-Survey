@@ -1,143 +1,132 @@
 <template>
     <template if:true={showSuccessScreen}>
         <div class="success-screen">
-            <div class="success-icon">
-                <lightning-icon
-                    icon-name="utility:success"
-                    size="large"
-                    variant="inverse">
-                </lightning-icon>
-            </div>
+            <lightning-icon icon-name="utility:success" size="large" variant="inverse"></lightning-icon>
             <h1 class="success-title">Thank you!</h1>
             <p class="success-text">Your responses have been submitted successfully.</p>
-
-            <lightning-button
-                label="Go to Dashboard"
-                variant="brand"
-                onclick={goToHome}>
-            </lightning-button>
+            <lightning-button label="Go to Dashboard" variant="brand" onclick={goToHome}></lightning-button>
         </div>
     </template>
 
-    <!-- 📝 Form Preview UI -->
     <template if:false={showSuccessScreen}>
-        <div class="slds-box slds-theme_default slds-m-around_medium">
+        <div class="survey-container">
             <h2 class="slds-text-heading_medium">{surveyTitle}</h2>
             <p class="slds-text-body_regular slds-m-bottom_medium">{surveyDescription}</p>
 
-            <template if:true={questions}>
-                <template for:each={questions} for:item="question">
-                    <div key={question.id} class="slds-m-bottom_medium">
-                        <label class="slds-form-element__label">
-                            {question.order}. {question.label}
-                            <template if:true={question.required}>
-                                <abbr title="required">*</abbr>
-                            </template>
-                        </label>
+            <template if:true={surveyCategory}>
+                <div class="slds-align_absolute-center">
+                    <p class="category-tag">{surveyCategory}</p>
+                </div>
+            </template>
 
-                        <template if:true={question.isText}>
-                            <lightning-input
-                                type="text"
-                                class="slds-m-top_xx-small"
-                                data-question-id={question.id}
-                                onchange={handleInputChange}>
-                            </lightning-input>
-                        </template>
+            <template if:true={sectionedQuestions}>
+                <template for:each={sectionedQuestions} for:item="section">
+                    <div key={section.sectionName} class="survey-section">
+                        <h3 class="slds-text-title_bold slds-m-bottom_small">{section.sectionName}</h3>
 
-                        <template if:true={question.isTextArea}>
-                            <lightning-textarea
-                                class="slds-m-top_xx-small"
-                                data-question-id={question.id}
-                                onchange={handleInputChange}>
-                            </lightning-textarea>
-                        </template>
+                        <template for:each={section.questions} for:item="question">
+                            <div key={question.id} class="slds-m-bottom_medium">
+                                <label class="slds-form-element__label">
+                                    {question.order}. {question.label}
+                                    <template if:true={question.required}>
+                                        <abbr title="required">*</abbr>
+                                    </template>
+                                </label>
 
-                        <template if:true={question.isNumber}>
-                            <lightning-input
-                                type="number"
-                                class="slds-m-top_xx-small"
-                                data-question-id={question.id}
-                                onchange={handleInputChange}>
-                            </lightning-input>
-                        </template>
-
-                        <template if:true={question.isDate}>
-                            <lightning-input
-                                type="date"
-                                class="slds-m-top_xx-small"
-                                data-question-id={question.id}
-                                onchange={handleInputChange}>
-                            </lightning-input>
-                        </template>
-
-                        <template if:true={question.isTime}>
-                            <lightning-input
-                                type="time"
-                                class="slds-m-top_xx-small"
-                                data-question-id={question.id}
-                                onchange={handleInputChange}>
-                            </lightning-input>
-                        </template>
-
-                        <template if:true={question.isEmail}>
-                            <lightning-input
-                                type="email"
-                                class="slds-m-top_xx-small"
-                                data-question-id={question.id}
-                                onchange={handleInputChange}>
-                            </lightning-input>
-                        </template>
-
-                        <template if:true={question.isPhone}>
-                            <lightning-input
-                                type="tel"
-                                class="slds-m-top_xx-small"
-                                data-question-id={question.id}
-                                onchange={handleInputChange}>
-                            </lightning-input>
-                        </template>
-
-                        <template if:true={question.isInstruction}>
-                            <p class="slds-text-title_bold slds-p-vertical_xx-small">{question.label}</p>
-                        </template>
-
-                        <template if:true={question.isRadio}>
-                            <template for:each={question.options} for:item="opt">
-                                <div key={opt.Id} class="slds-m-top_xx-small">
+                                <template if:true={question.isText}>
                                     <lightning-input
-                                        type="radio"
-                                        name={question.id}
-                                        label={opt.Label__c}
-                                        value={opt.Label__c}
+                                        type="text"
                                         data-question-id={question.id}
                                         onchange={handleInputChange}>
                                     </lightning-input>
-                                </div>
-                            </template>
-                        </template>
+                                </template>
 
-                        <template if:true={question.isCheckbox}>
-                            <template for:each={question.options} for:item="opt">
-                                <div key={opt.Id} class="slds-m-top_xx-small">
-                                    <lightning-input
-                                        type="checkbox"
-                                        label={opt.Label__c}
+                                <template if:true={question.isTextArea}>
+                                    <lightning-textarea
                                         data-question-id={question.id}
-                                        data-option-value={opt.Label__c}
-                                        onchange={handleCheckboxChange}>
-                                    </lightning-input>
-                                </div>
-                            </template>
-                        </template>
+                                        onchange={handleInputChange}>
+                                    </lightning-textarea>
+                                </template>
 
-                        <template if:true={question.isDropdown}>
-                            <lightning-combobox
-                                class="slds-m-top_xx-small"
-                                options={question.dropdownOptions}
-                                data-question-id={question.id}
-                                placeholder="Select an option"
-                                onchange={handleInputChange}>
-                            </lightning-combobox>
+                                <template if:true={question.isEmail}>
+                                    <lightning-input
+                                        type="email"
+                                        data-question-id={question.id}
+                                        onchange={handleInputChange}
+                                        onblur={reportTargetValidity}>
+                                    </lightning-input>
+                                </template>
+
+                                <template if:true={question.isPhone}>
+                                    <lightning-input
+                                        type="tel"
+                                        data-input="phone"
+                                        data-question-id={question.id}
+                                        onchange={handlePhoneInputChange}
+                                        onblur={handlePhoneInputChange}>
+                                    </lightning-input>
+                                </template>
+
+                                <template if:true={question.isNumber}>
+                                    <lightning-input
+                                        type="number"
+                                        data-question-id={question.id}
+                                        onchange={handleInputChange}>
+                                    </lightning-input>
+                                </template>
+
+                                <template if:true={question.isDate}>
+                                    <lightning-input
+                                        type="date"
+                                        data-question-id={question.id}
+                                        onchange={handleInputChange}>
+                                    </lightning-input>
+                                </template>
+
+                                <template if:true={question.isTime}>
+                                    <lightning-input
+                                        type="time"
+                                        data-question-id={question.id}
+                                        onchange={handleInputChange}>
+                                    </lightning-input>
+                                </template>
+
+                                <template if:true={question.isInstruction}>
+                                    <p class="slds-text-title_bold slds-p-vertical_xx-small">{question.label}</p>
+                                </template>
+
+                                <template if:true={question.isRadio}>
+                                    <lightning-radio-group
+                                        name={question.id}
+                                        data-question-id={question.id}
+                                        options={question.dropdownOptions}
+                                        type="radio"
+                                        onchange={handleInputChange}>
+                                    </lightning-radio-group>
+                                </template>
+
+                                <template if:true={question.isCheckbox}>
+                                    <template for:each={question.options} for:item="opt">
+                                        <lightning-input
+                                            key={opt.Id}
+                                            type="checkbox"
+                                            label={opt.Label__c}
+                                            data-question-id={question.id}
+                                            data-option-value={opt.Label__c}
+                                            onchange={handleCheckboxChange}>
+                                        </lightning-input>
+                                    </template>
+                                </template>
+
+                                <template if:true={question.isDropdown}>
+                                    <lightning-combobox
+                                        options={question.dropdownOptions}
+                                        data-question-id={question.id}
+                                        placeholder="Select an option"
+                                        onchange={handleInputChange}>
+                                    </lightning-combobox>
+                                </template>
+                            </div>
                         </template>
                     </div>
                 </template>
@@ -157,5 +146,4 @@
             <lightning-spinner alternative-text="Submitting..." size="large"></lightning-spinner>
         </div>
     </template>
-
 </template>

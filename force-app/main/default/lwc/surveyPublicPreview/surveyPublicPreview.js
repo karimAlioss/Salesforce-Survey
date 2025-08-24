@@ -4,6 +4,8 @@ import getSurveyForPreview from '@salesforce/apex/SurveyController.getSurveyForP
 import submitSurveyAnswers from '@salesforce/apex/SurveyAnswerController.submitAnswers';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
+const PHONE_REGEX = /^[+]?[\d\s().-]{7,20}$/;
+
 export default class SurveyPublicPreview extends LightningElement {
     @track surveyId;
     @track surveyTitle = '';
@@ -15,13 +17,31 @@ export default class SurveyPublicPreview extends LightningElement {
 
     answersMap = new Map();
 
+    isPhoneLabel(label) {
+        if (!label) return false;
+        return /(?:^|\b)(phone|mobile|tel|téléphone|portable)(?:\b|:)/i.test(label);
+    }
+    looksLikePhone(val) {
+        if (val === undefined || val === null) return false;
+        const s = String(val).trim();
+        return PHONE_REGEX.test(s);
+    }
+    reportTargetValidity = (evt) => evt?.target?.reportValidity?.();
+    validatePhoneInput(input) {
+        if (!input) return true;
+        const val = (input.value || '').trim();
+        if (!val) { input.setCustomValidity(''); input.reportValidity(); return true; }
+        const ok = PHONE_REGEX.test(val);
+        input.setCustomValidity(ok ? '' : 'Enter a valid phone number (e.g., +33 6 12 34 56 78).');
+        input.reportValidity();
+        return ok;
+    }
+
     @wire(CurrentPageReference)
     getStateParameters(currentPageReference) {
         if (currentPageReference) {
             this.surveyId = currentPageReference.state?.c__surveyid;
-            if (this.surveyId) {
-                this.loadSurvey();
-            }
+            if (this.surveyId) this.loadSurvey();
         }
     }
 
@@ -34,14 +54,20 @@ export default class SurveyPublicPreview extends LightningElement {
                 this.surveyCategory = survey.Category__c;
 
                 const sectionsMap = new Map();
-                for (let q of questions) {
+                const sectionFirstIndex = new Map();
+
+                for (let idx = 0; idx < questions.length; idx++) {
+                    const q = questions[idx];
                     const section = q.Section__c || 'General';
                     if (!sectionsMap.has(section)) {
                         sectionsMap.set(section, []);
+                        sectionFirstIndex.set(section, idx);
                     }
 
                     const qType = q.Question_Type__c;
-                    const qOptions = q.Options || [];
+                    const sortedOptions = (q.Options || [])
+                        .slice()
+                        .sort((a, b) => Number(a.Order__c || 0) - Number(b.Order__c || 0));
 
                     sectionsMap.get(section).push({
                         id: q.Id,
@@ -49,9 +75,9 @@ export default class SurveyPublicPreview extends LightningElement {
                         type: qType,
                         required: q.Required__c,
                         allowMultiple: q.Allow_Multiple__c,
-                        order: q.Order__c,
-                        options: qOptions,
-                        dropdownOptions: qOptions.map(o => ({ label: o.Label__c, value: o.Label__c })),
+                        order: Number(q.Order__c || 0),
+                        options: sortedOptions,
+                        dropdownOptions: sortedOptions.map(o => ({ label: o.Label__c, value: o.Label__c })),
                         isText: qType === 'Text',
                         isTextArea: qType === 'Text Area',
                         isNumber: qType === 'Number',
@@ -66,9 +92,16 @@ export default class SurveyPublicPreview extends LightningElement {
                     });
                 }
 
-                this.sectionedQuestions = Array.from(sectionsMap, ([sectionName, questions]) => ({
+                const sectionArray = Array.from(sectionsMap, ([sectionName, qs]) => ({
                     sectionName,
-                    questions
+                    questions: qs.slice().sort((a, b) => a.order - b.order),
+                    _firstIndex: sectionFirstIndex.get(sectionName)
+                }));
+                sectionArray.sort((a, b) => a._firstIndex - b._firstIndex);
+
+                this.sectionedQuestions = sectionArray.map(s => ({
+                    sectionName: s.sectionName,
+                    questions: s.questions
                 }));
             })
             .catch(error => {
@@ -82,22 +115,43 @@ export default class SurveyPublicPreview extends LightningElement {
         this.answersMap.set(questionId, value);
     }
 
+    handlePhoneInputChange = (event) => {
+        const input = event.target;
+        const questionId = input.dataset.questionId;
+        const value = input.value;
+        this.validatePhoneInput(input);
+        this.answersMap.set(questionId, value);
+    };
+
     handleCheckboxChange(event) {
         const questionId = event.target.dataset.questionId;
         const optionValue = event.target.dataset.optionValue;
         let existing = this.answersMap.get(questionId) || [];
-        if (event.target.checked) {
-            existing.push(optionValue);
-        } else {
-            existing = existing.filter(v => v !== optionValue);
-        }
+        if (event.target.checked) existing.push(optionValue);
+        else existing = existing.filter(v => v !== optionValue);
         this.answersMap.set(questionId, existing);
     }
 
     handleSubmit() {
         this.isSubmitting = true;
+
+        // ✅ Block submit if any phone is invalid
+        const phoneInputs = this.template.querySelectorAll('lightning-input[data-input="phone"]');
+        for (const el of phoneInputs) {
+            if (!this.validatePhoneInput(el)) {
+                this.isSubmitting = false;
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Invalid phone number',
+                    message: 'Please fix the phone number format.',
+                    variant: 'error'
+                }));
+                return;
+            }
+        }
+
         let respondentName = '';
         let respondentEmail = '';
+        let respondentPhone = '';
         const sentiment = null;
         const filteredAnswers = [];
 
@@ -105,22 +159,39 @@ export default class SurveyPublicPreview extends LightningElement {
             for (const q of section.questions) {
                 const value = this.answersMap.get(q.id);
 
-                if (q.label.toLowerCase().includes('name')) {
-                    respondentName = value || '';
-                    continue;
+                if (q.label && q.label.toLowerCase().includes('name')) {
+                    respondentName = value || respondentName;
                 }
-
                 if (q.type === 'Email') {
-                    respondentEmail = value || '';
+                    respondentEmail = value || respondentEmail;
+                }
+                if (!respondentPhone) {
+                    if (q.type === 'Phone' && value) {
+                        respondentPhone = value;
+                    } else if (this.isPhoneLabel(q.label) && this.looksLikePhone(value)) {
+                        respondentPhone = value;
+                    }
+                }
+
+                if (q.isCheckbox) {
+                    const arr = Array.isArray(value) ? value : [];
+                    if (arr.length > 0) {
+                        filteredAnswers.push({ questionId: q.id, answer: arr.join('; '), type: q.type });
+                    } else if (q.required) {
+                        this.isSubmitting = false;
+                        this.dispatchEvent(new ShowToastEvent({
+                            title: 'Missing Required Field',
+                            message: `Please answer all required questions`,
+                            variant: 'error'
+                        }));
+                        return;
+                    }
                     continue;
                 }
 
-                if ((value !== undefined && value !== null && value !== '') || q.isCheckbox) {
-                    filteredAnswers.push({
-                        questionId: q.id,
-                        answer: Array.isArray(value) ? value.join('; ') : value,
-                        type: q.type
-                    });
+                const hasValue = value !== undefined && value !== null && String(value).trim() !== '';
+                if (hasValue) {
+                    filteredAnswers.push({ questionId: q.id, answer: Array.isArray(value) ? value.join('; ') : value, type: q.type });
                 } else if (q.required) {
                     this.isSubmitting = false;
                     this.dispatchEvent(new ShowToastEvent({
@@ -137,6 +208,7 @@ export default class SurveyPublicPreview extends LightningElement {
             surveyId: this.surveyId,
             respondentName,
             respondentEmail,
+            respondentPhone,
             sentiment,
             answersJSON: JSON.stringify(filteredAnswers)
         })
@@ -155,7 +227,5 @@ export default class SurveyPublicPreview extends LightningElement {
             });
     }
 
-    goToHome() {
-        window.location.href = '/survey360/s/success';
-    }
+    goToHome() { window.location.href = '/survey360'; }
 }

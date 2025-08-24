@@ -2,20 +2,11 @@
     <template if:true={showSuccessScreen}>
         <div class="success-screen">
             <div class="success-icon">
-                <lightning-icon
-                    icon-name="utility:success"
-                    size="large"
-                    variant="inverse">
-                </lightning-icon>
+                <lightning-icon icon-name="utility:success" size="large" variant="inverse"></lightning-icon>
             </div>
             <h1 class="success-title">Success!</h1>
             <p class="success-text">Your survey has been created successfully.</p>
-
-            <lightning-button
-                label="Go to Dashboard"
-                variant="brand"
-                onclick={goToDashboard}>
-            </lightning-button>
+            <lightning-button label="Go to Dashboard" variant="brand" onclick={goToDashboard}></lightning-button>
         </div>
     </template>
 
@@ -43,122 +34,156 @@
             </div>
 
             <div class="builder-body">
+                <!-- Draggable sections -->
                 <template for:each={sections} for:item="section">
-                    <div key={section.id} class="builder-section">
+                    <div key={section.id}
+                         class="builder-section"
+                         draggable="true"
+                         data-section-id={section.id}
+                         ondragstart={handleSectionDragStart}
+                         ondragover={handleSectionDragOver}
+                         ondrop={handleSectionDrop}>
+
                         <div class="builder-section-header">
+                            <div class="drag-handle-section" title="Drag section">⠿</div>
+
+                            <!-- Section title (left-aligned, fills available width) -->
                             <lightning-input
+                                class="section-title-input"
                                 label="Section Title"
                                 value={section.name}
                                 data-id={section.id}
                                 onchange={handleSectionNameChange}>
                             </lightning-input>
 
-                            <lightning-button-icon
-                                icon-name="utility:close"
-                                title="Delete Section"
-                                onclick={deleteSection}
-                                data-id={section.id}>
-                            </lightning-button-icon>
+                            <div class="section-actions">
+                                <!-- Collapse / Expand -->
+                                <lightning-button-icon
+                                    icon-name={section.iconName}
+                                    alternative-text="Collapse/Expand"
+                                    title="Collapse/Expand"
+                                    variant="border-filled"
+                                    size="small"
+                                    onclick={toggleSectionCollapse}
+                                    data-id={section.id}>
+                                </lightning-button-icon>
+
+                                <!-- Delete section -->
+                                <lightning-button-icon
+                                    icon-name="utility:close"
+                                    title="Delete Section"
+                                    variant="border-filled"
+                                    size="small"
+                                    onclick={deleteSection}
+                                    data-id={section.id}>
+                                </lightning-button-icon>
+                            </div>
                         </div>
 
-                        <template for:each={section.questions} for:item="q">
-                            <div key={q.id} class="builder-question" draggable="true"
-                                data-section-id={section.id}
-                                data-question-id={q.id}
-                                ondragstart={handleDragStart}
-                                ondragover={handleDragOver}
-                                ondrop={handleDrop}>
+                        <!-- Questions inside the section (hidden when collapsed) -->
+                        <template if:false={section.collapsed}>
+                            <template for:each={section.questions} for:item="q">
+                                <div key={q.id}
+                                     class="builder-question"
+                                     draggable="true"
+                                     data-section-id={section.id}
+                                     data-question-id={q.id}
+                                     ondragstart={handleQuestionDragStart}
+                                     ondragover={handleQuestionDragOver}
+                                     ondrop={handleQuestionDrop}>
 
-                                <div class="drag-handle" title="Drag to reorder">⠿</div>
+                                    <div class="drag-handle" title="Drag question">⠿</div>
 
-                                <lightning-input
-                                    label="Question Label"
-                                    value={q.label}
-                                    data-section-id={section.id}
-                                    data-question-id={q.id}
-                                    onchange={handleQuestionLabelChange}>
-                                </lightning-input>
-
-                                <lightning-combobox
-                                    label="Type"
-                                    value={q.type}
-                                    options={questionTypeOptions}
-                                    data-section-id={section.id}
-                                    data-question-id={q.id}
-                                    onchange={handleQuestionTypeChange}>
-                                </lightning-combobox>
-
-                                <lightning-input
-                                    type="checkbox"
-                                    label="Required"
-                                    checked={q.required}
-                                    data-section-id={section.id}
-                                    data-question-id={q.id}
-                                    onchange={handleQuestionRequiredChange}>
-                                </lightning-input>
-
-                                <template if:true={q.showToggle}>
                                     <lightning-input
-                                        type="toggle"
-                                        label="Allow multiple answers"
-                                        checked={q.allowMultiple}
+                                        label="Question Label"
+                                        value={q.label}
                                         data-section-id={section.id}
                                         data-question-id={q.id}
-                                        onchange={handleAllowMultipleChange}>
+                                        onchange={handleQuestionLabelChange}>
                                     </lightning-input>
-                                </template>
 
-                                <template if:true={q.options}>
-                                    <div class="builder-options">
-                                        <template for:each={q.options} for:item="opt">
-                                            <div key={opt.id} class="builder-option-row">
-                                                <lightning-input
-                                                    value={opt.label}
-                                                    data-section-id={section.id}
-                                                    data-question-id={q.id}
-                                                    data-option-id={opt.id}
-                                                    onchange={updateOptionLabel}
-                                                    placeholder="Option label">
-                                                </lightning-input>
-                                                <lightning-button-icon
-                                                    icon-name="utility:close"
-                                                    title="Delete"
-                                                    onclick={deleteOption}
-                                                    data-section-id={section.id}
-                                                    data-question-id={q.id}
-                                                    data-option-id={opt.id}>
-                                                </lightning-button-icon>
-                                            </div>
-                                        </template>
+                                    <lightning-combobox
+                                        label="Type"
+                                        value={q.type}
+                                        options={questionTypeOptions}
+                                        data-section-id={section.id}
+                                        data-question-id={q.id}
+                                        onchange={handleQuestionTypeChange}>
+                                    </lightning-combobox>
 
-                                        <lightning-button
-                                            label="Add Choice"
-                                            icon-name="utility:add"
-                                            onclick={addOption}
+                                    <lightning-input
+                                        type="checkbox"
+                                        label="Required"
+                                        checked={q.required}
+                                        data-section-id={section.id}
+                                        data-question-id={q.id}
+                                        onchange={handleQuestionRequiredChange}>
+                                    </lightning-input>
+
+                                    <template if:true={q.showToggle}>
+                                        <lightning-input
+                                            type="toggle"
+                                            label="Allow multiple answers"
+                                            checked={q.allowMultiple}
                                             data-section-id={section.id}
-                                            data-question-id={q.id}>
-                                        </lightning-button>
-                                    </div>
-                                </template>
+                                            data-question-id={q.id}
+                                            onchange={handleAllowMultipleChange}>
+                                        </lightning-input>
+                                    </template>
 
-                                <lightning-button
-                                    label="Delete Question"
-                                    icon-name="utility:close"
-                                    onclick={deleteQuestion}
-                                    data-section-id={section.id}
-                                    data-question-id={q.id}
-                                    class="slds-m-top_small">
-                                </lightning-button>
-                            </div>
+                                    <!-- Options only for choice types -->
+                                    <template if:true={q.isChoice}>
+                                        <div class="builder-options">
+                                            <template for:each={q.options} for:item="opt">
+                                                <div key={opt.id} class="builder-option-row">
+                                                    <lightning-input
+                                                        value={opt.label}
+                                                        data-section-id={section.id}
+                                                        data-question-id={q.id}
+                                                        data-option-id={opt.id}
+                                                        onchange={updateOptionLabel}
+                                                        placeholder="Option label">
+                                                    </lightning-input>
+                                                    <lightning-button-icon
+                                                        icon-name="utility:close"
+                                                        title="Delete"
+                                                        onclick={deleteOption}
+                                                        data-section-id={section.id}
+                                                        data-question-id={q.id}
+                                                        data-option-id={opt.id}>
+                                                    </lightning-button-icon>
+                                                </div>
+                                            </template>
+
+                                            <lightning-button
+                                                label="Add Choice"
+                                                icon-name="utility:add"
+                                                onclick={addOption}
+                                                data-section-id={section.id}
+                                                data-question-id={q.id}>
+                                            </lightning-button>
+                                        </div>
+                                    </template>
+
+                                    <lightning-button
+                                        label="Delete Question"
+                                        icon-name="utility:close"
+                                        onclick={deleteQuestion}
+                                        data-section-id={section.id}
+                                        data-question-id={q.id}
+                                        class="slds-m-top_small">
+                                    </lightning-button>
+                                </div>
+                            </template>
+
+                            <lightning-button
+                                label="Add Question"
+                                icon-name="utility:add"
+                                onclick={addQuestion}
+                                data-section-id={section.id}
+                                class="slds-m-top_medium">
+                            </lightning-button>
                         </template>
-
-                        <lightning-button
-                            label="Add Question"
-                            icon-name="utility:add"
-                            onclick={addQuestion}
-                            data-section-id={section.id}
-                            class="slds-m-top_medium">
-                        </lightning-button>
                     </div>
                 </template>
 

@@ -6,8 +6,8 @@ import saveSurveyAndQuestions from '@salesforce/apex/SurveyController.saveSurvey
 import getPicklistValues from '@salesforce/apex/SurveyController.getPicklistValues';
 
 export default class SurveyBuilder extends LightningElement {
-
     @api surveyId;
+
     @track surveyTitle = '';
     @track surveyDescription = '';
     @track category = '';
@@ -17,29 +17,21 @@ export default class SurveyBuilder extends LightningElement {
     @track categoryOptions = [];
     @track questionTypeOptions = [];
 
+    draggedSectionId = null;
+
     connectedCallback() {
-        if (this.surveyId) {
-            this.loadSurvey();
-        }
+        if (this.surveyId) this.loadSurvey();
         this.loadPicklistOptions();
     }
 
     loadPicklistOptions() {
         getPicklistValues({ objectName: 'Survey__c', fieldName: 'Category__c' })
-            .then(data => {
-                this.categoryOptions = data.map(item => ({ label: item, value: item }));
-            })
-            .catch(error => {
-                console.error('Error loading category picklist:', error);
-            });
+            .then(data => { this.categoryOptions = data.map(item => ({ label: item, value: item })); })
+            .catch(error => console.error('Error loading category picklist:', error));
 
         getPicklistValues({ objectName: 'Survey_Question__c', fieldName: 'Question_Type__c' })
-            .then(data => {
-                this.questionTypeOptions = data.map(item => ({ label: item, value: item }));
-            })
-            .catch(error => {
-                console.error('Error loading question type picklist:', error);
-            });
+            .then(data => { this.questionTypeOptions = data.map(item => ({ label: item, value: item })); })
+            .catch(error => console.error('Error loading question type picklist:', error));
     }
 
     loadSurvey() {
@@ -51,23 +43,30 @@ export default class SurveyBuilder extends LightningElement {
                 this.category = survey.Category__c;
                 this.sections = this.convertQuestionsToSections(questions);
             })
-            .catch(error => {
-                console.error('❌ Failed to load survey:', error);
-            });
+            .catch(error => console.error('❌ Failed to load survey:', error));
     }
 
     convertQuestionsToSections(questions) {
         const sectionMap = new Map();
+        const firstIndex = new Map();
 
-        questions.forEach(q => {
+        questions.forEach((q, idx) => {
             const sectionName = q.Section__c || 'Default Section';
             if (!sectionMap.has(sectionName)) {
                 sectionMap.set(sectionName, {
                     id: this.generateId('section'),
                     name: sectionName,
-                    questions: []
+                    questions: [],
+                    collapsed: false,
+                    iconName: 'utility:chevronup' // default expanded ⇒ up arrow
                 });
+                firstIndex.set(sectionName, idx);
             }
+
+            const isChoice = this.isChoiceType(q.Question_Type__c);
+            const mappedOptions = isChoice && q.Options
+                ? q.Options.map(opt => ({ id: opt.Id, label: opt.Label__c }))
+                : undefined;
 
             const question = {
                 id: q.Id,
@@ -78,46 +77,42 @@ export default class SurveyBuilder extends LightningElement {
                 showToggle: q.Question_Type__c === 'Checkbox',
 
                 isTextArea: q.Question_Type__c === 'Text Area',
-                isNumber: q.Question_Type__c === 'Number',
-                isDate: q.Question_Type__c === 'Date',
-                isTime: q.Question_Type__c === 'Time',
-                isEmail: q.Question_Type__c === 'Email',
-                isPhone: q.Question_Type__c === 'Phone',
+                isNumber:   q.Question_Type__c === 'Number',
+                isDate:     q.Question_Type__c === 'Date',
+                isTime:     q.Question_Type__c === 'Time',
+                isEmail:    q.Question_Type__c === 'Email',
+                isPhone:    q.Question_Type__c === 'Phone',
                 isInstruction: q.Question_Type__c === 'Instruction',
 
-                options: q.Options?.map(opt => ({
-                    id: opt.Id,
-                    label: opt.Label__c
-                })) || []
+                isChoice,
+                options: mappedOptions
             };
 
             sectionMap.get(sectionName).questions.push(question);
         });
 
-        return Array.from(sectionMap.values());
+        const sectionsArr = Array.from(sectionMap.values());
+        sectionsArr.sort((a, b) => firstIndex.get(a.name) - firstIndex.get(b.name));
+        return sectionsArr;
     }
 
     generateId(prefix) {
         return prefix + '_' + Math.random().toString(36).substring(2, 9);
     }
 
-    handleTitleChange(e) {
-        this.surveyTitle = e.target.value;
-    }
+    // Header
+    handleTitleChange(e) { this.surveyTitle = e.target.value; }
+    handleDescriptionChange(e) { this.surveyDescription = e.target.value; }
+    handleCategoryChange(e) { this.category = e.detail.value; }
 
-    handleDescriptionChange(e) {
-        this.surveyDescription = e.target.value;
-    }
-
-    handleCategoryChange(e) {
-        this.category = e.detail.value;
-    }
-
+    // Section CRUD
     addSection() {
         const newSection = {
             id: this.generateId('section'),
             name: '',
-            questions: []
+            questions: [],
+            collapsed: false,
+            iconName: 'utility:chevronup'
         };
         this.sections = [...this.sections, newSection];
     }
@@ -130,13 +125,55 @@ export default class SurveyBuilder extends LightningElement {
     handleSectionNameChange(event) {
         const sectionId = event.target.dataset.id;
         const value = event.target.value;
-
         this.sections = this.sections.map(section => {
             if (section.id === sectionId) section.name = value;
             return section;
         });
     }
 
+    // Collapse/Expand (updates icon)
+    toggleSectionCollapse(event) {
+        const sectionId = event.target.dataset.id;
+        this.sections = this.sections.map(section => {
+            if (section.id === sectionId) {
+                section.collapsed = !section.collapsed;
+                section.iconName = section.collapsed ? 'utility:chevrondown' : 'utility:chevronup';
+            }
+            return section;
+        });
+    }
+
+    // Section DnD
+    handleSectionDragStart(event) {
+        this.draggedSectionId = event.currentTarget.dataset.sectionId;
+        try {
+            event.dataTransfer.setData('text/section', this.draggedSectionId);
+            event.dataTransfer.effectAllowed = 'move';
+        } catch (e) {}
+    }
+    handleSectionDragOver(event) {
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    }
+    handleSectionDrop(event) {
+        event.preventDefault();
+        const targetSectionId = event.currentTarget.dataset.sectionId;
+        let draggedId;
+        try { draggedId = event.dataTransfer.getData('text/section'); } catch (e) { draggedId = this.draggedSectionId; }
+        if (!draggedId || draggedId === targetSectionId) return;
+
+        const fromIndex = this.sections.findIndex(s => s.id === draggedId);
+        const toIndex = this.sections.findIndex(s => s.id === targetSectionId);
+        if (fromIndex === -1 || toIndex === -1) return;
+
+        const newSections = [...this.sections];
+        const [moved] = newSections.splice(fromIndex, 1);
+        newSections.splice(toIndex, 0, moved);
+        this.sections = newSections;
+        this.draggedSectionId = null;
+    }
+
+    // Question CRUD
     addQuestion(event) {
         const sectionId = event.target.dataset.sectionId;
         const newQuestion = {
@@ -146,33 +183,30 @@ export default class SurveyBuilder extends LightningElement {
             required: false,
             options: undefined,
             allowMultiple: false,
-            showToggle: false
+            showToggle: false,
+            isChoice: false,
+            isTextArea: false,
+            isNumber: false,
+            isDate: false,
+            isTime: false,
+            isEmail: false,
+            isPhone: false,
+            isInstruction: false
         };
-
         this.sections = this.sections.map(section => {
-            if (section.id === sectionId) {
-                section.questions = [...section.questions, newQuestion];
-            }
+            if (section.id === sectionId) section.questions = [...section.questions, newQuestion];
             return section;
         });
     }
-
     deleteQuestion(event) {
         const sectionId = event.target.dataset.sectionId;
         const questionId = event.target.dataset.questionId;
-
         this.sections = this.sections.map(section => {
-            if (section.id === sectionId) {
-                section.questions = section.questions.filter(q => q.id !== questionId);
-            }
+            if (section.id === sectionId) section.questions = section.questions.filter(q => q.id !== questionId);
             return section;
         });
     }
-
-    handleQuestionLabelChange(event) {
-        this.updateQuestionField(event, 'label', event.target.value);
-    }
-
+    handleQuestionLabelChange(event) { this.updateQuestionField(event, 'label', event.target.value); }
     handleQuestionTypeChange(event) {
         const value = event.detail.value;
         const sectionId = event.target.dataset.sectionId;
@@ -183,16 +217,17 @@ export default class SurveyBuilder extends LightningElement {
                 section.questions = section.questions.map(q => {
                     if (q.id === questionId) {
                         q.type = value;
-                        q.options = this.isChoiceType(value) ? [] : undefined;
+                        const nowChoice = this.isChoiceType(value);
+                        q.isChoice = nowChoice;
+                        q.options = nowChoice ? (q.options ?? []) : undefined;
                         q.allowMultiple = false;
                         q.showToggle = value === 'Checkbox';
-
                         q.isTextArea = value === 'Text Area';
-                        q.isNumber = value === 'Number';
-                        q.isDate = value === 'Date';
-                        q.isTime = value === 'Time';
-                        q.isEmail = value === 'Email';
-                        q.isPhone = value === 'Phone';
+                        q.isNumber   = value === 'Number';
+                        q.isDate     = value === 'Date';
+                        q.isTime     = value === 'Time';
+                        q.isEmail    = value === 'Email';
+                        q.isPhone    = value === 'Phone';
                         q.isInstruction = value === 'Instruction';
                     }
                     return q;
@@ -201,16 +236,11 @@ export default class SurveyBuilder extends LightningElement {
             return section;
         });
     }
-
-    handleQuestionRequiredChange(event) {
-        this.updateQuestionField(event, 'required', event.target.checked);
-    }
-
+    handleQuestionRequiredChange(event) { this.updateQuestionField(event, 'required', event.target.checked); }
     handleAllowMultipleChange(event) {
         const sectionId = event.target.dataset.sectionId;
         const questionId = event.target.dataset.questionId;
         const value = event.target.checked;
-
         this.sections = this.sections.map(section => {
             if (section.id === sectionId) {
                 section.questions = section.questions.map(q => {
@@ -221,11 +251,9 @@ export default class SurveyBuilder extends LightningElement {
             return section;
         });
     }
-
     updateQuestionField(event, field, value) {
         const sectionId = event.target.dataset.sectionId;
         const questionId = event.target.dataset.questionId;
-
         this.sections = this.sections.map(section => {
             if (section.id === sectionId) {
                 section.questions = section.questions.map(q => {
@@ -237,18 +265,16 @@ export default class SurveyBuilder extends LightningElement {
         });
     }
 
+    // Options (only for choice types)
     addOption(event) {
         const sectionId = event.target.dataset.sectionId;
         const questionId = event.target.dataset.questionId;
-
         this.sections = this.sections.map(section => {
             if (section.id === sectionId) {
                 section.questions = section.questions.map(q => {
-                    if (q.id === questionId && q.options !== undefined) {
-                        q.options.push({
-                            id: this.generateId('opt'),
-                            label: ''
-                        });
+                    if (q.id === questionId && q.isChoice) {
+                        if (!q.options) q.options = [];
+                        q.options.push({ id: this.generateId('opt'), label: '' });
                     }
                     return q;
                 });
@@ -256,17 +282,15 @@ export default class SurveyBuilder extends LightningElement {
             return section;
         });
     }
-
     updateOptionLabel(event) {
         const sectionId = event.target.dataset.sectionId;
         const questionId = event.target.dataset.questionId;
         const optionId = event.target.dataset.optionId;
         const value = event.target.value;
-
         this.sections = this.sections.map(section => {
             if (section.id === sectionId) {
                 section.questions = section.questions.map(q => {
-                    if (q.id === questionId && q.options) {
+                    if (q.id === questionId && q.isChoice && q.options) {
                         q.options = q.options.map(o => {
                             if (o.id === optionId) o.label = value;
                             return o;
@@ -278,16 +302,14 @@ export default class SurveyBuilder extends LightningElement {
             return section;
         });
     }
-
     deleteOption(event) {
         const sectionId = event.target.dataset.sectionId;
         const questionId = event.target.dataset.questionId;
         const optionId = event.target.dataset.optionId;
-
         this.sections = this.sections.map(section => {
             if (section.id === sectionId) {
                 section.questions = section.questions.map(q => {
-                    if (q.id === questionId && q.options) {
+                    if (q.id === questionId && q.isChoice && q.options) {
                         q.options = q.options.filter(o => o.id !== optionId);
                     }
                     return q;
@@ -297,13 +319,40 @@ export default class SurveyBuilder extends LightningElement {
         });
     }
 
-    isChoiceType(type) {
-        return type === 'Radio' || type === 'Checkbox' || type === 'Dropdown';
+    // Question DnD (within same section)
+    handleQuestionDragStart(event) {
+        const sectionId = event.currentTarget.dataset.sectionId;
+        const questionId = event.currentTarget.dataset.questionId;
+        event.dataTransfer.setData('text/plain', JSON.stringify({ sectionId, questionId }));
+        event.dataTransfer.effectAllowed = 'move';
     }
+    handleQuestionDragOver(event) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; }
+    handleQuestionDrop(event) {
+        event.preventDefault();
+        const from = JSON.parse(event.dataTransfer.getData('text/plain'));
+        const toSectionId = event.currentTarget.dataset.sectionId;
+        const toQuestionId = event.currentTarget.dataset.questionId;
+        if (from.sectionId !== toSectionId) return;
+
+        this.sections = this.sections.map(section => {
+            if (section.id !== toSectionId) return section;
+
+            const draggedIndex = section.questions.findIndex(q => q.id === from.questionId);
+            const dropIndex = section.questions.findIndex(q => q.id === toQuestionId);
+            if (draggedIndex === -1 || dropIndex === -1 || draggedIndex === dropIndex) return section;
+
+            const updatedQuestions = [...section.questions];
+            const [movedQuestion] = updatedQuestions.splice(draggedIndex, 1);
+            updatedQuestions.splice(dropIndex, 0, movedQuestion);
+            updatedQuestions.forEach((q, i) => q.questionOrder = i + 1);
+            return { ...section, questions: updatedQuestions };
+        });
+    }
+
+    isChoiceType(type) { return type === 'Radio' || type === 'Checkbox' || type === 'Dropdown'; }
 
     validateBeforeSave() {
         let hasError = false;
-
         this.sections.forEach(section => {
             section.questions.forEach(q => {
                 q.error = '';
@@ -311,7 +360,6 @@ export default class SurveyBuilder extends LightningElement {
                     q.error = 'Question label is required';
                     hasError = true;
                 }
-
                 if (this.isChoiceType(q.type)) {
                     if (!q.options || q.options.length === 0) {
                         q.error = 'At least one option is required';
@@ -328,7 +376,6 @@ export default class SurveyBuilder extends LightningElement {
                 }
             });
         });
-
         return !hasError;
     }
 
@@ -337,29 +384,29 @@ export default class SurveyBuilder extends LightningElement {
             alert('Survey title and category are required.');
             return;
         }
-
         if (!this.validateBeforeSave()) {
             alert('Please fix validation errors before saving.');
             return;
         }
 
         const flatQuestions = [];
+        let globalOrder = 0;
 
         this.sections.forEach((section, sectionIndex) => {
             if (!section.questions || section.questions.length === 0) return;
-
-            section.questions.forEach((q, questionIndex) => {
+            section.questions.forEach(q => {
+                globalOrder += 1;
                 flatQuestions.push({
-                    Id: q.id && !q.id.startsWith('q_') ? q.id : null,
+                    Id: q.id && !String(q.id).startsWith('q_') ? q.id : null,
                     sectionName: section.name,
                     questionLabel: q.label,
                     questionType: q.type,
                     required: q.required,
                     allowMultiple: q.allowMultiple || false,
                     sectionOrder: sectionIndex + 1,
-                    questionOrder: questionIndex + 1,
-                    options: q.options ? q.options.map((opt, i) => ({
-                        Id: opt.id && !opt.id.startsWith('opt_') ? opt.id : null,
+                    questionOrder: globalOrder,
+                    options: this.isChoiceType(q.type) && q.options ? q.options.map((opt, i) => ({
+                        Id: opt.id && !String(opt.id).startsWith('opt_') ? opt.id : null,
                         label: opt.label,
                         order: i + 1
                     })) : []
@@ -380,79 +427,20 @@ export default class SurveyBuilder extends LightningElement {
             : saveSurveyAndQuestions(payload);
 
         action
-            .then((surveyId) => {
+            .then(() => {
                 this.showToast('Success', 'Survey saved successfully!', 'success');
                 this.resetForm();
                 this.showSuccessScreen = true;
             })
-            .catch(err => {
-                this.showToast('Error', err?.body?.message || 'Unexpected error', 'error');
-            });
+            .catch(err => this.showToast('Error', err?.body?.message || 'Unexpected error', 'error'));
     }
 
-    handleSaveDraft() {
-        this.saveSurvey('Draft');
-    }
+    handleSaveDraft() { this.saveSurvey('Draft'); }
+    handlePublish()   { this.saveSurvey('Published'); }
 
-    handlePublish() {
-        this.saveSurvey('Published');
-    }
+    resetForm() { this.surveyTitle = ''; this.surveyDescription = ''; this.category = ''; this.sections = []; }
 
-    resetForm() {
-        this.surveyTitle = '';
-        this.surveyDescription = '';
-        this.category = '';
-        this.sections = [];
-    }
+    showToast(title, message, variant) { this.dispatchEvent(new ShowToastEvent({ title, message, variant })); }
 
-    showToast(title, message, variant) {
-        this.dispatchEvent(
-            new ShowToastEvent({
-                title,
-                message,
-                variant
-            })
-        );
-    }
-
-    goToDashboard() {
-        window.location.href = '/lightning/n/Survey_Manager';
-    }
-
-    handleDragStart(event) {
-        const sectionId = event.currentTarget.dataset.sectionId;
-        const questionId = event.currentTarget.dataset.questionId;
-        event.dataTransfer.setData('text/plain', JSON.stringify({ sectionId, questionId }));
-    }
-
-    handleDragOver(event) {
-        event.preventDefault();
-    }
-
-    handleDrop(event) {
-        event.preventDefault();
-        const from = JSON.parse(event.dataTransfer.getData('text/plain'));
-        const toSectionId = event.currentTarget.dataset.sectionId;
-        const toQuestionId = event.currentTarget.dataset.questionId;
-
-        if (from.sectionId !== toSectionId) return;
-
-        this.sections = this.sections.map(section => {
-            if (section.id !== toSectionId) return section;
-
-            const draggedIndex = section.questions.findIndex(q => q.id === from.questionId);
-            const dropIndex = section.questions.findIndex(q => q.id === toQuestionId);
-
-            if (draggedIndex === -1 || dropIndex === -1 || draggedIndex === dropIndex) return section;
-
-            const updatedQuestions = [...section.questions];
-            const [movedQuestion] = updatedQuestions.splice(draggedIndex, 1);
-            updatedQuestions.splice(dropIndex, 0, movedQuestion);
-
-            // Optionally update questionOrder right away
-            updatedQuestions.forEach((q, i) => q.questionOrder = i + 1);
-
-            return { ...section, questions: updatedQuestions };
-        });
-    }
+    goToDashboard() { window.location.href = '/lightning/n/Survey_Manager'; }
 }

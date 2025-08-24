@@ -1,4 +1,4 @@
-import { createElement } from 'lwc';
+import { createElement } from '@lwc/engine-dom';
 import SurveyPublicPreview from 'c/surveyPublicPreview';
 
 describe('c-survey-public-preview', () => {

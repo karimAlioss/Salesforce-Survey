@@ -18,7 +18,6 @@
                 <p class="category-tag">{surveyCategory}</p>
             </div>
 
-
             <template for:each={sectionedQuestions} for:item="section">
                 <div key={section.sectionName} class="survey-section">
                     <h3 class="slds-text-title_bold slds-m-bottom_small">{section.sectionName}</h3>
@@ -35,27 +34,42 @@
                             <template if:true={question.isText}>
                                 <lightning-input type="text" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
                             </template>
+
                             <template if:true={question.isTextArea}>
                                 <lightning-textarea data-question-id={question.id} onchange={handleInputChange}></lightning-textarea>
                             </template>
+
                             <template if:true={question.isEmail}>
-                                <lightning-input type="email" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
+                                <lightning-input type="email" data-question-id={question.id} onchange={handleInputChange} onblur={reportTargetValidity}></lightning-input>
                             </template>
+
+                            <!-- ✅ Phone with custom validation -->
                             <template if:true={question.isPhone}>
-                                <lightning-input type="tel" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
+                                <lightning-input
+                                    type="tel"
+                                    data-input="phone"
+                                    data-question-id={question.id}
+                                    onchange={handlePhoneInputChange}
+                                    onblur={handlePhoneInputChange}>
+                                </lightning-input>
                             </template>
+
                             <template if:true={question.isNumber}>
                                 <lightning-input type="number" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
                             </template>
+
                             <template if:true={question.isDate}>
                                 <lightning-input type="date" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
                             </template>
+
                             <template if:true={question.isTime}>
                                 <lightning-input type="time" data-question-id={question.id} onchange={handleInputChange}></lightning-input>
                             </template>
+
                             <template if:true={question.isInstruction}>
                                 <p class="slds-text-title_bold slds-p-vertical_xx-small">{question.label}</p>
                             </template>
+
                             <template if:true={question.isRadio}>
                                 <lightning-radio-group
                                     name={question.id}
@@ -65,6 +79,7 @@
                                     onchange={handleInputChange}>
                                 </lightning-radio-group>
                             </template>
+
                             <template if:true={question.isCheckbox}>
                                 <template for:each={question.options} for:item="opt">
                                     <lightning-input
@@ -77,6 +92,7 @@
                                     </lightning-input>
                                 </template>
                             </template>
+
                             <template if:true={question.isDropdown}>
                                 <lightning-combobox
                                     options={question.dropdownOptions}
@@ -96,6 +112,12 @@
                 class="slds-m-top_medium"
                 onclick={handleSubmit}>
             </lightning-button>
+        </div>
+    </template>
+
+    <template if:true={isSubmitting}>
+        <div class="spinner-overlay">
+            <lightning-spinner alternative-text="Submitting..." size="large"></lightning-spinner>
         </div>
     </template>
 </template>

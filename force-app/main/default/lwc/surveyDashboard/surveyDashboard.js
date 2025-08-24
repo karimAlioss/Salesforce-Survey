@@ -50,12 +50,8 @@ export default class SurveyDashboard extends LightningElement {
 
         deleteSurvey({ surveyId })
             .then(() => {
-                // ✅ Immediately remove from UI
                 this.surveys = this.surveys.filter(s => s.Id !== surveyId);
-
                 this.showToast('Deleted', 'Survey deleted successfully', 'success');
-
-                // Optional: force server re-sync
                 return refreshApex(this.wiredSurveysResult);
             })
             .then(() => {
