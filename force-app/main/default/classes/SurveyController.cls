@@ -208,8 +208,16 @@ public with sharing class SurveyController {
     @AuraEnabled(cacheable=true)
     public static List<Survey__c> getAllSurveys() {
         try {
+            // ✅ Added CreatedBy.Name and Owner.Name so LWC can render names
             List<Survey__c> surveys = [
-                SELECT Id, Survey_Name__c, Description__c, Status__c, Category__c, CreatedDate
+                SELECT Id,
+                       Survey_Name__c,
+                       Description__c,
+                       Status__c,
+                       Category__c,
+                       CreatedDate,
+                       CreatedBy.Name,
+                       Owner.Name
                 FROM Survey__c
                 WHERE Status__c IN ('Draft', 'Published')
                 ORDER BY LastModifiedDate DESC
@@ -276,7 +284,7 @@ public with sharing class SurveyController {
             throw new AuraHandledException('Failed to delete survey: ' + e.getMessage());
         }
     }
-    
+
     /*************************************Testing The Dynamic Listing /**************************************/
     @AuraEnabled(cacheable=true)
     public static List<String> getPicklistValues(String objectName, String fieldName) {
@@ -311,4 +319,4 @@ public with sharing class SurveyController {
         ];
     }
 
-} 
+}

@@ -5,44 +5,176 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
 export default class SurveyDashboard extends LightningElement {
+    // data
     surveys = [];
+    displayed = [];
     isLoading = true;
     wiredSurveysResult;
 
-    get noSurveys() {
-        return !this.surveys || this.surveys.length === 0;
+    // filters
+    searchText = '';
+    selectedCategory = 'ALL';
+    selectedStatus = 'ALL';
+
+    categoryOptions = [{ label: 'Any category', value: 'ALL' }];
+    statusOptions = [
+        { label: 'Any status', value: 'ALL' },
+        { label: 'Published', value: 'Published' },
+        { label: 'Draft', value: 'Draft' }
+    ];
+
+    // sort
+    sortBy = ''; // empty → placeholder shows; default to date in code
+    sortDir = 'desc';
+    sortOptions = [
+        { label: 'Date', value: 'date' },
+        { label: 'Name', value: 'name' },
+        { label: 'Category', value: 'category' },
+        { label: 'Status', value: 'status' }
+    ];
+    get sortDirIcon() {
+        return this.sortDir === 'asc' ? 'utility:arrowup' : 'utility:arrowdown';
     }
 
+    // chips + count
+    get selectedCategoryLabel() {
+        return this.selectedCategory !== 'ALL' ? this.selectedCategory : '';
+    }
+    get selectedStatusLabel() {
+        return this.selectedStatus !== 'ALL' ? this.selectedStatus : '';
+    }
+    get hasActiveFilters() {
+        return !!(this.selectedCategoryLabel || this.selectedStatusLabel || this.searchText);
+    }
+    get filteredCount() {
+        return this.displayed.length || 0;
+    }
+    get noSurveys() {
+        return !this.displayed || this.displayed.length === 0;
+    }
+
+    // wire
     @wire(getSurveys)
     wiredSurveys(result) {
         this.wiredSurveysResult = result;
-
         const { data, error } = result;
+
         if (data) {
-            this.surveys = data;
+            // enrich rows
+            this.surveys = data.map(s => {
+                const created = new Date(s.CreatedDate);
+                const dd = String(created.getDate()).padStart(2, '0');
+                const mm = String(created.getMonth() + 1).padStart(2, '0');
+                const yyyy = created.getFullYear();
+                const createdDate = `${dd}/${mm}/${yyyy}`;
+
+                const statusClass = `status-badge ${String(s.Status__c).toLowerCase() === 'published' ? 'published' : 'draft'}`;
+
+                return {
+                    ...s,
+                    _createdByName: s.CreatedBy ? s.CreatedBy.Name : '',
+                    _createdDate: createdDate,
+                    _statusClass: statusClass
+                };
+            });
+
+            this.buildCategoryOptions();
+            this.applyFiltersSort();
             this.isLoading = false;
         } else if (error) {
+            // eslint-disable-next-line no-console
             console.error('Error loading surveys:', error);
             this.isLoading = false;
         }
     }
 
-    handleEdit(event) {
-        const surveyId = event.currentTarget.dataset.id;
-        this.dispatchEvent(new CustomEvent('editsurvey', {
-            detail: { surveyId }
-        }));
+    // utils
+    normalize(v) {
+        return (v || '').toString().trim().toLowerCase();
     }
 
+    buildCategoryOptions() {
+        const uniq = Array.from(new Set(this.surveys.map(s => s.Category__c).filter(Boolean)));
+        this.categoryOptions = [{ label: 'Any category', value: 'ALL' }, ...uniq.map(x => ({ label: x, value: x }))];
+    }
+
+    applyFiltersSort() {
+        const text = this.normalize(this.searchText);
+        const key = this.sortBy || 'date';
+        const dir = this.sortDir === 'asc' ? 1 : -1;
+
+        let list = this.surveys.filter(s => {
+            const matchesText =
+                !text ||
+                this.normalize(s.Survey_Name__c).includes(text) ||
+                this.normalize(s._createdByName || '').includes(text);
+
+            const matchesCat = this.selectedCategory === 'ALL' || s.Category__c === this.selectedCategory;
+            const matchesStatus = this.selectedStatus === 'ALL' || s.Status__c === this.selectedStatus;
+
+            return matchesText && matchesCat && matchesStatus;
+        });
+
+        list.sort((a, b) => {
+            let va, vb;
+            switch (key) {
+                case 'name':
+                    va = a.Survey_Name__c || ''; vb = b.Survey_Name__c || '';
+                    return va.localeCompare(vb, undefined, { sensitivity: 'base' }) * dir;
+                case 'status':
+                    va = a.Status__c || ''; vb = b.Status__c || '';
+                    return va.localeCompare(vb, undefined, { sensitivity: 'base' }) * dir;
+                case 'category':
+                    va = a.Category__c || ''; vb = b.Category__c || '';
+                    return va.localeCompare(vb, undefined, { sensitivity: 'base' }) * dir;
+                case 'date':
+                default:
+                    va = new Date(a.CreatedDate).getTime();
+                    vb = new Date(b.CreatedDate).getTime();
+                    return (va - vb) * dir;
+            }
+        });
+
+        this.displayed = list;
+    }
+
+    // handlers: filters & sort
+    handleSearch(e) {
+        this.searchText = e.target.value || '';
+        this.applyFiltersSort();
+    }
+    handleCategoryChange(e) {
+        this.selectedCategory = e.detail.value;
+        this.applyFiltersSort();
+    }
+    handleStatusChange(e) {
+        this.selectedStatus = e.detail.value;
+        this.applyFiltersSort();
+    }
+    handleSortChange(e) {
+        this.sortBy = e.detail.value;
+        this.applyFiltersSort();
+    }
+    toggleSortDir() {
+        this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+        this.applyFiltersSort();
+    }
+    clearCategory = () => { this.selectedCategory = 'ALL'; this.applyFiltersSort(); }
+    clearStatus   = () => { this.selectedStatus = 'ALL'; this.applyFiltersSort(); }
+    clearAll      = () => { this.selectedCategory = 'ALL'; this.selectedStatus = 'ALL'; this.searchText = ''; this.applyFiltersSort(); }
+
+    // actions
+    handleEdit(event) {
+        const surveyId = event.currentTarget.dataset.id;
+        this.dispatchEvent(new CustomEvent('editsurvey', { detail: { surveyId } }));
+    }
     handleCreateNew() {
         this.dispatchEvent(new CustomEvent('createnew'));
     }
-
     handleTogglePreview(event) {
         const surveyId = event.currentTarget.dataset.id;
         window.open('/lightning/n/Survey_Preview?c__surveyid=' + surveyId, '_blank');
     }
-
     handleDeleteSurvey(event) {
         const surveyId = event.currentTarget.dataset.id;
         if (!confirm('Are you sure you want to delete this survey?')) return;
@@ -55,9 +187,11 @@ export default class SurveyDashboard extends LightningElement {
                 return refreshApex(this.wiredSurveysResult);
             })
             .then(() => {
+                this.applyFiltersSort();
                 this.isLoading = false;
             })
             .catch(err => {
+                // eslint-disable-next-line no-console
                 console.error('Delete error:', err);
                 this.isLoading = false;
                 this.showToast('Error', err?.body?.message || 'Failed to delete survey', 'error');
@@ -65,12 +199,6 @@ export default class SurveyDashboard extends LightningElement {
     }
 
     showToast(title, message, variant) {
-        this.dispatchEvent(
-            new ShowToastEvent({
-                title,
-                message,
-                variant
-            })
-        );
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }

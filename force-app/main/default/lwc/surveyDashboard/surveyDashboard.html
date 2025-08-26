@@ -2,31 +2,103 @@
     <lightning-card>
         <div class="dashboard-container">
 
-            <!-- 🔄 Spinner Overlay -->
+            <!-- Spinner -->
             <template if:true={isLoading}>
-                <lightning-spinner
-                    alternative-text="Loading..."
-                    size="medium"
-                    variant="brand">
-                </lightning-spinner>
+                <lightning-spinner alternative-text="Loading..." size="medium" variant="brand"></lightning-spinner>
             </template>
 
-            <!-- 🔹 Header -->
+            <!-- Header -->
             <div class="dashboard-header slds-grid slds-grid_align-spread slds-m-bottom_medium">
                 <h2 class="slds-text-heading_medium">My Surveys</h2>
-                <lightning-button 
-                    variant="brand"
-                    label="+ Create Survey"
-                    onclick={handleCreateNew}>
-                </lightning-button>
+                <lightning-button variant="brand" label="+ Create Survey" onclick={handleCreateNew}></lightning-button>
             </div>
 
-            <!-- 🔸 Survey Cards -->
-            <template if:true={surveys.length}>
-                <template for:each={surveys} for:item="survey">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <!-- Row 1 -->
+                <div class="toolbar-line">
+                    <!-- Search -->
+                    <div class="search">
+                        <lightning-input
+                            class="field"
+                            type="search"
+                            value={searchText}
+                            placeholder="Search surveys or creators…"
+                            onchange={handleSearch}>
+                        </lightning-input>
+                    </div>
+
+                    <!-- Category -->
+                    <lightning-combobox
+                        class="field"
+                        label=" "
+                        value={selectedCategory}
+                        options={categoryOptions}
+                        onchange={handleCategoryChange}>
+                    </lightning-combobox>
+
+                    <!-- Status -->
+                    <lightning-combobox
+                        class="field"
+                        label=" "
+                        value={selectedStatus}
+                        options={statusOptions}
+                        onchange={handleStatusChange}>
+                    </lightning-combobox>
+
+                    <div class="flex-spacer"></div>
+
+                    <!-- Sort (placeholder inside) -->
+                    <div class="sort">
+                        <lightning-combobox
+                            label="Sort by"
+                            variant="label-hidden"
+                            placeholder="Sort by"
+                            value={sortBy}
+                            options={sortOptions}
+                            onchange={handleSortChange}
+                            class="field sort-field">
+                        </lightning-combobox>
+                        <lightning-button-icon
+                            icon-name={sortDirIcon}
+                            variant="bare"
+                            size="small"
+                            alternative-text="Toggle sort"
+                            onclick={toggleSortDir}>
+                        </lightning-button-icon>
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="toolbar-line line-2">
+                    <div class="chips">
+                        <template if:true={selectedCategoryLabel}>
+                            <span class="chip">
+                                {selectedCategoryLabel}
+                                <lightning-button-icon icon-name="utility:close" size="xx-small" variant="bare" class="chip-x" onclick={clearCategory}></lightning-button-icon>
+                            </span>
+                        </template>
+                        <template if:true={selectedStatusLabel}>
+                            <span class="chip">
+                                {selectedStatusLabel}
+                                <lightning-button-icon icon-name="utility:close" size="xx-small" variant="bare" class="chip-x" onclick={clearStatus}></lightning-button-icon>
+                            </span>
+                        </template>
+                        <template if:true={hasActiveFilters}>
+                            <button class="chip clear" onclick={clearAll}>Clear all</button>
+                        </template>
+                    </div>
+
+                    <div class="found">Found <b>{filteredCount}</b> surveys</div>
+                </div>
+            </div>
+
+            <!-- Survey list -->
+            <template if:true={displayed.length}>
+                <template for:each={displayed} for:item="survey">
                     <div key={survey.Id} class="survey-card slds-grid slds-wrap slds-grid_align-start">
 
-                        <!-- Icon + Title Group -->
+                        <!-- Icon + Title -->
                         <div class="slds-col slds-size_6-of-12 slds-grid slds-align-center icon-text-wrap">
                             <div class="survey-icon-container">
                                 <svg class="custom-svg-icon" clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2"
@@ -38,48 +110,38 @@
                             </div>
                             <div class="text-area">
                                 <div class="survey-title">{survey.Survey_Name__c}</div>
-                                <div class="survey-meta">Created • 12 Questions</div>
+                                <div class="inline-badges">
+                                    <template if:true={survey.Category__c}>
+                                        <span class="category-pill">{survey.Category__c}</span>
+                                    </template>
+                                    <span class={survey._statusClass}>{survey.Status__c}</span>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Stats -->
                         <div class="slds-col slds-size_3-of-12 stats-area">
                             <div class="stat-block">
-                                <div class="stat-label">Owner</div>
-                                <div class="stat-value">Elkhayloufi</div>
+                                <div class="stat-label">Created By</div>
+                                <div class="stat-value">{survey._createdByName}</div>
                             </div>
                             <div class="stat-block">
                                 <div class="stat-label">Created Date</div>
-                                <div class="stat-value">17/07/2025</div>
+                                <div class="stat-value">{survey._createdDate}</div>
                             </div>
                         </div>
 
-                        <!-- Actions -->
+                        <!-- Actions: pill buttons (View · Edit · Delete) -->
                         <div class="slds-col slds-size_3-of-12 actions-area slds-align_absolute-center">
-                            <svg class="action-icon icon-blue" data-id={survey.Id} onclick={handleEdit} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <title>Edit</title>
-                                <path d="M18.308 0l-16.87 16.873-1.436 7.127 7.125-1.437 16.872-16.875-5.691-5.688zm-15.751 21.444l.723-3.585 12.239-12.241 2.861 2.862-12.239 12.241-3.584.723zm17.237-14.378l-2.861-2.862 1.377-1.377 2.861 2.861-1.377 1.378z"/>
-                            </svg>
-
-                            <svg class="action-icon icon-grey" data-id={survey.Id} onclick={handleTogglePreview} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <title>Preview</title>
-                                <path d="M12 5c-7.633 0-12 7-12 7s4.371 7 12 7 12-7 12-7-4.367-7-12-7zm0 12c-2.761 0-5-2.239-5-5s2.239-5 
-                                5-5 5 2.239 5 5-2.239 5-5 5zm0-8c-1.656 0-3 
-                                1.344-3 3s1.344 3 3 3 3-1.344 
-                                3-3-1.344-3-3-3z"/>
-                            </svg>
-
-                            <svg class="action-icon icon-red" data-id={survey.Id} onclick={handleDeleteSurvey} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <title>Delete</title>
-                                <path d="M10 2v2h4v-2h-4zm12 2v2h-20v-2h5.333l1.6-2h6.134l1.6 2h5.333zm-2 4l-1 14h-12l-1-14h14zm-4 
-                                2h-6v10h6v-10z"/>
-                            </svg>
+                            <button class="btn btn-outline-info"    data-id={survey.Id} onclick={handleTogglePreview}>View</button>
+                            <button class="btn btn-outline-primary" data-id={survey.Id} onclick={handleEdit}>Edit</button>
+                            <button class="btn btn-outline-danger"  data-id={survey.Id} onclick={handleDeleteSurvey}>Delete</button>
                         </div>
                     </div>
                 </template>
             </template>
 
-            <!-- 🛑 No Surveys -->
+            <!-- Empty state -->
             <template if:true={noSurveys}>
                 <div class="slds-text-align_center slds-text-body_regular slds-p-vertical_medium">
                     No surveys found.
