@@ -2,6 +2,7 @@ import { LightningElement, wire } from 'lwc';
 import getSurveys from '@salesforce/apex/SurveyController.getAllSurveys';
 import deleteSurvey from '@salesforce/apex/SurveyController.deleteSurvey';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import deleteSurveyAndData from '@salesforce/apex/SurveyController.deleteSurveyAndData';
 import { refreshApex } from '@salesforce/apex';
 
 export default class SurveyDashboard extends LightningElement {
@@ -10,6 +11,10 @@ export default class SurveyDashboard extends LightningElement {
     displayed = [];
     isLoading = true;
     wiredSurveysResult;
+    // Modal state for 3-option delete
+    showDeletePrompt = false;
+    isDeleting = false;
+    pendingSurveyId = null;
 
     // filters
     searchText = '';
@@ -201,4 +206,77 @@ export default class SurveyDashboard extends LightningElement {
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
+
+    // Open the 3-choice delete modal
+    openDeletePrompt(event) {
+        const id = event?.currentTarget?.dataset?.id;
+        if (!id) return;
+        this.pendingSurveyId = id;
+        this.showDeletePrompt = true;
+    }
+
+    // Close the modal (prevent closing during deletion)
+    closeDeletePrompt() {
+        if (this.isDeleting) return;
+        this.showDeletePrompt = false;
+        this.pendingSurveyId = null;
+    }
+
+    // Backdrop click closes the modal
+    onBackdropClick() {
+        this.closeDeletePrompt();
+    }
+
+    // Option 1: Delete Survey (Survey + Questions + Options) using your existing Apex method
+    async confirmDeleteSurveyOnly() {
+        if (!this.pendingSurveyId) return;
+
+        this.isDeleting = true;
+        try {
+            await deleteSurvey({ surveyId: this.pendingSurveyId });
+
+            // Refresh server data → keep your wire-based refresh
+            await refreshApex(this.wiredSurveysResult);
+
+            // Local UI list update (optional safety)
+            this.surveys = this.surveys.filter(s => s.Id !== this.pendingSurveyId);
+            this.applyFiltersSort();
+
+            this.showToast('Survey deleted', 'Survey, Questions, and Options have been deleted.', 'success');
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('Delete survey only error:', err);
+            this.showToast('Delete blocked', err?.body?.message || 'This survey cannot be deleted.', 'warning');
+        } finally {
+            this.isDeleting = false;
+            this.closeDeletePrompt();
+        }
+    }
+
+    // Option 2: Delete Survey + ALL data (Responses + Answers too) using the new Apex method
+    async confirmDeleteAll() {
+        if (!this.pendingSurveyId) return;
+
+        this.isDeleting = true;
+        try {
+            await deleteSurveyAndData({ surveyId: this.pendingSurveyId });
+
+            // Refresh server data
+            await refreshApex(this.wiredSurveysResult);
+
+            // Local UI list update (optional safety)
+            this.surveys = this.surveys.filter(s => s.Id !== this.pendingSurveyId);
+            this.applyFiltersSort();
+
+            this.showToast('Survey and related data deleted', 'Survey, Questions, Options, Responses, and Answers have been deleted.', 'success');
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('Delete all data error:', err);
+            this.showToast('Error', err?.body?.message || 'Failed to delete survey and related data', 'error');
+        } finally {
+            this.isDeleting = false;
+            this.closeDeletePrompt();
+        }
+    }
+
 }

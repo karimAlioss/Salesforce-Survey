@@ -1,0 +1,156 @@
+<template>
+  <lightning-card>
+    <div class="dashboard-container">
+
+      <!-- Spinner -->
+      <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading..." size="medium" variant="brand"></lightning-spinner>
+      </template>
+
+      <!-- Header -->
+      <div class="dashboard-header slds-grid slds-grid_align-spread slds-m-bottom_medium">
+        <h2 class="slds-text-heading_medium">Survey Responses</h2>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-line">
+          <div class="search">
+            <lightning-input
+              class="field"
+              type="search"
+              value={searchText}
+              placeholder="Search by respondent, email, survey…"
+              onchange={handleSearch}>
+            </lightning-input>
+          </div>
+
+          <lightning-combobox
+            class="field"
+            label=" "
+            value={selectedSurvey}
+            options={surveyOptions}
+            onchange={handleSurveyChange}>
+          </lightning-combobox>
+
+          <lightning-combobox
+            class="field"
+            label=" "
+            value={selectedStatus}
+            options={statusOptions}
+            onchange={handleStatusChange}>
+          </lightning-combobox>
+
+          <lightning-combobox
+            class="field"
+            label=" "
+            value={selectedSentiment}
+            options={sentimentOptions}
+            onchange={handleSentimentChange}>
+          </lightning-combobox>
+
+          <div class="flex-spacer"></div>
+
+          <div class="sort">
+            <lightning-combobox
+              label="Sort by"
+              variant="label-hidden"
+              placeholder="Sort by"
+              value={sortBy}
+              options={sortOptions}
+              onchange={handleSortChange}
+              class="field sort-field">
+            </lightning-combobox>
+            <lightning-button-icon
+              icon-name={sortDirIcon}
+              variant="bare"
+              size="small"
+              alternative-text="Toggle sort"
+              onclick={toggleSortDir}>
+            </lightning-button-icon>
+          </div>
+        </div>
+
+        <div class="toolbar-line line-2">
+          <div class="chips">
+            <template if:true={selectedSurveyLabel}>
+              <span class="chip">
+                {selectedSurveyLabel}
+                <lightning-button-icon icon-name="utility:close" size="xx-small" variant="bare" class="chip-x" onclick={clearSurvey}></lightning-button-icon>
+              </span>
+            </template>
+            <template if:true={selectedStatusLabel}>
+              <span class="chip">
+                {selectedStatusLabel}
+                <lightning-button-icon icon-name="utility:close" size="xx-small" variant="bare" class="chip-x" onclick={clearStatus}></lightning-button-icon>
+              </span>
+            </template>
+            <template if:true={selectedSentimentLabel}>
+              <span class="chip">
+                {selectedSentimentLabel}
+                <lightning-button-icon icon-name="utility:close" size="xx-small" variant="bare" class="chip-x" onclick={clearSentiment}></lightning-button-icon>
+              </span>
+            </template>
+            <template if:true={hasActiveFilters}>
+              <button class="chip clear" onclick={clearAll}>Clear all</button>
+            </template>
+          </div>
+
+          <div class="found">Found <b>{displayedCount}</b> responses</div>
+        </div>
+      </div>
+
+      <!-- List -->
+      <template if:true={displayed.length}>
+        <template for:each={displayed} for:item="r">
+          <div key={r.Id} class="response-card">
+            <div class="left">
+              <div class="title">
+                <span class="name">{r.Respondent_Name__c}</span>
+                <template if:true={r.Survey__r}>
+                  <span class="survey-pill">{r.Survey__r.Survey_Name__c}</span>
+                </template>
+                <template if:true={r.Sentiment__c}>
+                  <span class={r._sentimentClass}>{r.Sentiment__c}</span>
+                </template>
+                <span class={r._statusClass}>{r.Status__c}</span>
+              </div>
+
+              <div class="sub">
+                <template if:true={r.Respondent_Email__c}>
+                  <span class="meta">{r.Respondent_Email__c}</span>
+                </template>
+                <template if:true={r.Respondent_Phone__c}>
+                  <span class="dot">•</span>
+                  <span class="meta">{r.Respondent_Phone__c}</span>
+                </template>
+                <span class="dot">•</span>
+                <span class="meta">{r._completionDate}</span>
+                <template if:true={r._category}>
+                  <span class="dot">•</span>
+                  <span class="meta">{r._category}</span>
+                </template>
+              </div>
+
+              <template if:true={r.Customer_Feedback__c}>
+                <p class="feedback">{r._feedbackShort}</p>
+              </template>
+            </div>
+
+            <div class="right">
+              <button class="btn btn-outline-info" data-id={r.Id} onclick={openPreview}>Preview</button>
+              <button class="btn btn-outline-danger" data-id={r.Id} onclick={handleDelete}>Delete</button>
+            </div>
+          </div>
+        </template>
+      </template>
+
+      <template if:false={displayed.length}>
+        <div class="empty">No responses match your filters.</div>
+      </template>
+
+      <!-- Preview modal -->
+      <c-survey-response-preview onclose={handlePreviewClose} ondeleted={handlePreviewDeleted}></c-survey-response-preview>
+    </div>
+  </lightning-card>
+</template>

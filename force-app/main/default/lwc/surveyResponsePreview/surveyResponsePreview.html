@@ -1,0 +1,97 @@
+<template>
+  <template if:true={open}>
+    <section class="backdrop" onclick={closeByBackdrop}></section>
+
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Survey Response Preview">
+      <header class="modal-head">
+        <div class="head-left">
+          <h2 class="title">{headerName}</h2>
+          <div class="sub">
+            <template if:true={surveyName}>
+              <span class="survey-pill">{surveyName}</span>
+            </template>
+            <template if:true={sentiment}>
+              <span class={sentimentClass}>{sentiment}</span>
+            </template>
+            <template if:true={status}>
+              <span class={statusClass}>{status}</span>
+            </template>
+          </div>
+        </div>
+
+        <button class="icon-btn" onclick={emitClose} title="Close">✕</button>
+      </header>
+
+      <div class="modal-body">
+        <template if:true={loading}>
+          <div class="center">
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+          </div>
+        </template>
+
+        <template if:false={loading}>
+          <div class="info-grid">
+            <div>
+              <div class="label">Respondent</div>
+              <div class="value">{respondentName}</div>
+            </div>
+            <div>
+              <div class="label">Email</div>
+              <div class="value">{email}</div>
+            </div>
+            <div>
+              <div class="label">Phone</div>
+              <div class="value">{phone}</div>
+            </div>
+            <div>
+              <div class="label">Completed</div>
+              <div class="value">{completion}</div>
+            </div>
+            <template if:true={category}>
+              <div>
+                <div class="label">Category</div>
+                <div class="value">{category}</div>
+              </div>
+            </template>
+            <div>
+              <div class="label">Created By</div>
+              <div class="value">{createdBy}</div>
+            </div>
+          </div>
+
+          <template if:true={feedback}>
+            <div class="block">
+              <div class="block-title">Customer Feedback</div>
+              <pre class="feedback">{feedback}</pre>
+            </div>
+          </template>
+
+          <div class="block">
+            <div class="block-title">Answers</div>
+
+            <template for:each={sectioned} for:item="sec">
+              <div key={sec.name} class="section">
+                <h3 class="section-title">{sec.name}</h3>
+                <div class="qa-list">
+                  <template for:each={sec.items} for:item="row">
+                    <div key={row.id} class="qa-row">
+                      <div class="q">{row.order}. {row.label}</div>
+                      <div class="a">{row.answer}</div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <footer class="modal-foot">
+        <a class="btn btn-outline-info" href={responseUrl} target="_blank">Open Record</a>
+        <div class="spacer"></div>
+        <button class="btn btn-outline-danger" onclick={deleteCurrent}>Delete</button>
+        <button class="btn" onclick={emitClose}>Close</button>
+      </footer>
+    </div>
+  </template>
+</template>

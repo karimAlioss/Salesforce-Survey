@@ -135,7 +135,7 @@
                         <div class="slds-col slds-size_3-of-12 actions-area slds-align_absolute-center">
                             <button class="btn btn-outline-info"    data-id={survey.Id} onclick={handleTogglePreview}>View</button>
                             <button class="btn btn-outline-primary" data-id={survey.Id} onclick={handleEdit}>Edit</button>
-                            <button class="btn btn-outline-danger"  data-id={survey.Id} onclick={handleDeleteSurvey}>Delete</button>
+                            <button class="btn btn-outline-danger"  data-id={survey.Id} onclick={openDeletePrompt}>Delete</button>
                         </div>
                     </div>
                 </template>
@@ -148,5 +148,57 @@
                 </div>
             </template>
         </div>
+
+        <!-- === ADD THIS BLOCK NEAR THE END OF THE TEMPLATE (before </lightning-card> / </template>) === -->
+        <template if:true={showDeletePrompt}>
+            <!-- Backdrop (click to close) -->
+            <div class="s360-modal-backdrop" onclick={onBackdropClick}></div>
+
+            <!-- Lightweight modal -->
+            <section role="dialog" aria-modal="true" class="s360-modal">
+                <header class="s360-modal__header">
+                    <h2>Delete Survey</h2>
+                </header>
+
+                <div class="s360-modal__body">
+                    <p>Choose what to delete for this survey. This action cannot be undone.</p>
+                    <ul class="s360-modal__list">
+                        <li><strong>Delete Survey</strong> — removes the Survey, its Questions, and their Options.</li>
+                        <li><strong>Delete Survey and All data related to it</strong> — also removes Responses and Answers.</li>
+                    </ul>
+                </div>
+
+                <footer class="s360-modal__footer">
+                    <lightning-button
+                        label="Cancel"
+                        variant="neutral"
+                        onclick={closeDeletePrompt}
+                        disabled={isDeleting}>
+                    </lightning-button>
+
+                    <lightning-button
+                        label="Delete Survey"
+                        variant="destructive"
+                        title="Delete Survey, Questions, and Options"
+                        onclick={confirmDeleteSurveyOnly}
+                        disabled={isDeleting}>
+                    </lightning-button>
+
+                    <lightning-button
+                        label="Delete Survey and All data related to it"
+                        variant="destructive"
+                        title="Delete Survey, Questions, Options, Responses, and Answers"
+                        onclick={confirmDeleteAll}
+                        disabled={isDeleting}>
+                    </lightning-button>
+                </footer>
+
+                <template if:true={isDeleting}>
+                    <div class="s360-modal__spinner">
+                        <lightning-spinner alternative-text="Deleting..." size="small"></lightning-spinner>
+                    </div>
+                </template>
+            </section>
+        </template>
     </lightning-card>
 </template>

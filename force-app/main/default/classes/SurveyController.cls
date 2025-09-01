@@ -266,22 +266,47 @@ public with sharing class SurveyController {
 
     @AuraEnabled
     public static void deleteSurvey(Id surveyId) {
+        if (surveyId == null) {
+            throw new AuraHandledException('Survey Id is required.');
+        }
+
         try {
-            List<Survey_Question__c> questions = [
-                SELECT Id FROM Survey_Question__c
+            // If responses exist, block and guide the user to the cascade option
+            Integer respCount = [
+                SELECT COUNT()
+                FROM Survey_Response__c
                 WHERE Survey__c = :surveyId
             ];
+            if (respCount > 0) {
+                // ✅ Clean, human message (no tech prefix)
+                throw new AuraHandledException(
+                    'This survey has responses. Choose “Delete Survey and All data related to it” to remove everything.'
+                );
+            }
 
-            List<Survey_Option__c> options = [
-                SELECT Id FROM Survey_Option__c
-                WHERE Survey_Question__c IN :questions
+            // Proceed with deleting Survey (questions/options first)
+            List<Survey_Question__c> questions = [
+                SELECT Id FROM Survey_Question__c WHERE Survey__c = :surveyId
+            ];
+            List<Survey_Option__c> options = questions.isEmpty() ? new List<Survey_Option__c>() : [
+                SELECT Id FROM Survey_Option__c WHERE Survey_Question__c IN :questions
             ];
 
-            delete options;
-            delete questions;
-            delete [SELECT Id FROM Survey__c WHERE Id = :surveyId];
+            if (!options.isEmpty()) delete options;
+            if (!questions.isEmpty()) delete questions;
+            delete [SELECT Id FROM Survey__c WHERE Id = :surveyId LIMIT 1];
+
+        } catch (AuraHandledException ahe) {
+            // Pass through our clean message
+            throw ahe;
+        } catch (DmlException dml) {
+            // Likely a related-record block: show a friendly hint
+            throw new AuraHandledException(
+                'This survey couldn’t be deleted because there are related records. Use “Delete Survey and All data related to it”.'
+            );
         } catch (Exception e) {
-            throw new AuraHandledException('Failed to delete survey: ' + e.getMessage());
+            // Short generic fallback
+            throw new AuraHandledException('Delete failed due to an unexpected error. Please try again.');
         }
     }
 
@@ -318,5 +343,68 @@ public with sharing class SurveyController {
             ORDER BY Published_Date__c DESC
         ];
     }
+
+    // === ADD THIS NEW METHOD (inside SurveyController) ===
+    @AuraEnabled
+    public static void deleteSurveyAndData(Id surveyId) {
+        if (surveyId == null) {
+            throw new AuraHandledException('Survey Id is required.');
+        }
+
+        Savepoint sp = Database.setSavepoint();
+        try {
+            // 1) Collect Questions for the Survey
+            List<Survey_Question__c> questions = [
+                SELECT Id
+                FROM Survey_Question__c
+                WHERE Survey__c = :surveyId
+                LIMIT 50000
+            ];
+            Set<Id> questionIds = new Set<Id>();
+            for (Survey_Question__c q : questions) questionIds.add(q.Id);
+
+            // 2) Collect Options tied to those Questions
+            List<Survey_Option__c> options = questionIds.isEmpty() ? new List<Survey_Option__c>() : [
+                SELECT Id
+                FROM Survey_Option__c
+                WHERE Survey_Question__c IN :questionIds
+                LIMIT 50000
+            ];
+
+            // 3) Collect Responses for the Survey
+            List<Survey_Response__c> responses = [
+                SELECT Id
+                FROM Survey_Response__c
+                WHERE Survey__c = :surveyId
+                LIMIT 50000
+            ];
+            Set<Id> responseIds = new Set<Id>();
+            for (Survey_Response__c r : responses) responseIds.add(r.Id);
+
+            // 4) Collect Answers tied to either the questions or the responses
+            List<Survey_Answer__c> answers =
+                (questionIds.isEmpty() && responseIds.isEmpty())
+                ? new List<Survey_Answer__c>()
+                : [
+                    SELECT Id
+                    FROM Survey_Answer__c
+                    WHERE (Survey_Question__c IN :questionIds OR Survey_Response__c IN :responseIds)
+                    LIMIT 50000
+                ];
+
+            // 5) Delete in a safe order (children first)
+            if (!answers.isEmpty())   Database.delete(answers, false);
+            if (!options.isEmpty())   Database.delete(options, false);
+            if (!questions.isEmpty()) Database.delete(questions, false);
+            if (!responses.isEmpty()) Database.delete(responses, false);
+
+            // 6) Finally delete the Survey itself
+            delete [SELECT Id FROM Survey__c WHERE Id = :surveyId LIMIT 1];
+
+        } catch (Exception e) {
+            Database.rollback(sp);
+            throw new AuraHandledException('Failed to delete Survey and related data: ' + e.getMessage());
+        }
+}
 
 }
