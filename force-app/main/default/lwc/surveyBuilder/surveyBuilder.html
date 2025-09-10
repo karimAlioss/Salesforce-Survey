@@ -12,6 +12,7 @@
 
     <template if:false={showSuccessScreen}>
         <div class="builder-container">
+            <!-- Header -->
             <div class="builder-header">
                 <lightning-input
                     label="Survey Title"
@@ -33,8 +34,8 @@
                 </lightning-combobox>
             </div>
 
+            <!-- Body -->
             <div class="builder-body">
-                <!-- Draggable sections -->
                 <template for:each={sections} for:item="section">
                     <div key={section.id}
                          class="builder-section"
@@ -45,9 +46,8 @@
                          ondrop={handleSectionDrop}>
 
                         <div class="builder-section-header">
-                            <div class="drag-handle-section" title="Drag section">⠿</div>
+                            <div class="drag-handle-section" title="Drag section" data-id={section.id}>⠿</div>
 
-                            <!-- Section title (left-aligned, fills available width) -->
                             <lightning-input
                                 class="section-title-input"
                                 label="Section Title"
@@ -57,7 +57,6 @@
                             </lightning-input>
 
                             <div class="section-actions">
-                                <!-- Collapse / Expand -->
                                 <lightning-button-icon
                                     icon-name={section.iconName}
                                     alternative-text="Collapse/Expand"
@@ -65,22 +64,23 @@
                                     variant="border-filled"
                                     size="small"
                                     onclick={toggleSectionCollapse}
-                                    data-id={section.id}>
+                                    data-id={section.id}
+                                    class="btn-icon btn-collapse">
                                 </lightning-button-icon>
 
                                 <!-- Delete section -->
                                 <lightning-button-icon
                                     icon-name="utility:close"
                                     title="Delete Section"
-                                    variant="border-filled"
+                                    variant="destructive"
                                     size="small"
                                     onclick={deleteSection}
-                                    data-id={section.id}>
+                                    data-id={section.id}
+                                    class="btn-icon btn-delete">
                                 </lightning-button-icon>
                             </div>
                         </div>
 
-                        <!-- Questions inside the section (hidden when collapsed) -->
                         <template if:false={section.collapsed}>
                             <template for:each={section.questions} for:item="q">
                                 <div key={q.id}
@@ -92,46 +92,50 @@
                                      ondragover={handleQuestionDragOver}
                                      ondrop={handleQuestionDrop}>
 
-                                    <div class="drag-handle" title="Drag question">⠿</div>
+                                    <div class="question-row">
+                                        <div class="drag-handle" title="Drag question" data-question-id={q.id}>⠿</div>
 
-                                    <lightning-input
-                                        label="Question Label"
-                                        value={q.label}
-                                        data-section-id={section.id}
-                                        data-question-id={q.id}
-                                        onchange={handleQuestionLabelChange}>
-                                    </lightning-input>
+                                        <div class="question-fields">
+                                            <lightning-input
+                                                label="Question Label"
+                                                value={q.label}
+                                                data-section-id={section.id}
+                                                data-question-id={q.id}
+                                                onchange={handleQuestionLabelChange}>
+                                            </lightning-input>
 
-                                    <lightning-combobox
-                                        label="Type"
-                                        value={q.type}
-                                        options={questionTypeOptions}
-                                        data-section-id={section.id}
-                                        data-question-id={q.id}
-                                        onchange={handleQuestionTypeChange}>
-                                    </lightning-combobox>
+                                            <lightning-combobox
+                                                label="Type"
+                                                value={q.type}
+                                                options={questionTypeOptions}
+                                                data-section-id={section.id}
+                                                data-question-id={q.id}
+                                                onchange={handleQuestionTypeChange}>
+                                            </lightning-combobox>
 
-                                    <lightning-input
-                                        type="checkbox"
-                                        label="Required"
-                                        checked={q.required}
-                                        data-section-id={section.id}
-                                        data-question-id={q.id}
-                                        onchange={handleQuestionRequiredChange}>
-                                    </lightning-input>
+                                            <lightning-input
+                                                type="checkbox"
+                                                label="Required"
+                                                checked={q.required}
+                                                data-section-id={section.id}
+                                                data-question-id={q.id}
+                                                onchange={handleQuestionRequiredChange}>
+                                            </lightning-input>
 
-                                    <template if:true={q.showToggle}>
-                                        <lightning-input
-                                            type="toggle"
-                                            label="Allow multiple answers"
-                                            checked={q.allowMultiple}
-                                            data-section-id={section.id}
-                                            data-question-id={q.id}
-                                            onchange={handleAllowMultipleChange}>
-                                        </lightning-input>
-                                    </template>
+                                            <template if:true={q.showToggle}>
+                                                <lightning-input
+                                                    type="toggle"
+                                                    label="Allow multiple answers"
+                                                    checked={q.allowMultiple}
+                                                    data-section-id={section.id}
+                                                    data-question-id={q.id}
+                                                    onchange={handleAllowMultipleChange}>
+                                                </lightning-input>
+                                            </template>
+                                        </div>
+                                    </div>
 
-                                    <!-- Options only for choice types -->
+                                    <!-- Options -->
                                     <template if:true={q.isChoice}>
                                         <div class="builder-options">
                                             <template for:each={q.options} for:item="opt">
@@ -147,10 +151,12 @@
                                                     <lightning-button-icon
                                                         icon-name="utility:close"
                                                         title="Delete"
+                                                        variant="destructive"
                                                         onclick={deleteOption}
                                                         data-section-id={section.id}
                                                         data-question-id={q.id}
-                                                        data-option-id={opt.id}>
+                                                        data-option-id={opt.id}
+                                                        class="btn-icon btn-delete">
                                                     </lightning-button-icon>
                                                 </div>
                                             </template>
@@ -158,9 +164,11 @@
                                             <lightning-button
                                                 label="Add Choice"
                                                 icon-name="utility:add"
+                                                variant="brand"
                                                 onclick={addOption}
                                                 data-section-id={section.id}
-                                                data-question-id={q.id}>
+                                                data-question-id={q.id}
+                                                class="btn btn-option">
                                             </lightning-button>
                                         </div>
                                     </template>
@@ -168,10 +176,11 @@
                                     <lightning-button
                                         label="Delete Question"
                                         icon-name="utility:close"
+                                        variant="destructive"
                                         onclick={deleteQuestion}
                                         data-section-id={section.id}
                                         data-question-id={q.id}
-                                        class="slds-m-top_small">
+                                        class="btn btn-delete slds-m-top_small">
                                     </lightning-button>
                                 </div>
                             </template>
@@ -179,9 +188,10 @@
                             <lightning-button
                                 label="Add Question"
                                 icon-name="utility:add"
+                                variant="brand"
                                 onclick={addQuestion}
                                 data-section-id={section.id}
-                                class="slds-m-top_medium">
+                                class="btn btn-question slds-m-top_medium">
                             </lightning-button>
                         </template>
                     </div>
@@ -190,11 +200,13 @@
                 <lightning-button
                     label="Add Section"
                     icon-name="utility:add"
+                    variant="brand"
                     onclick={addSection}
-                    class="slds-m-top_large">
+                    class="btn btn-section slds-m-top_large">
                 </lightning-button>
             </div>
 
+            <!-- Footer -->
             <div class="builder-footer">
                 <lightning-button
                     label="Save to Draft"

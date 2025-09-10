@@ -1,4 +1,4 @@
-import { createElement } from 'lwc';
+import { createElement } from '@lwc/engine-dom';
 import SurveyResponseDashboard from 'c/surveyResponseDashboard';
 
 describe('c-survey-response-dashboard', () => {

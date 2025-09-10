@@ -14,6 +14,8 @@ export default class SurveyResponseDashboard extends LightningElement {
   displayed = [];
   wiredResult; // for refresh
 
+  _didForceFirstRefresh = false;
+
   // filters
   searchText = '';
   selectedSurvey = 'ALL';
@@ -99,6 +101,12 @@ export default class SurveyResponseDashboard extends LightningElement {
 
       this.applyFiltersSort();
       this.isLoading = false;
+
+      if (!this._didForceFirstRefresh && this.wiredResult) {
+        this._didForceFirstRefresh = true;
+        setTimeout(() => refreshApex(this.wiredResult), 0);
+      }
+
     } else if (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to load responses:', error);
@@ -209,6 +217,12 @@ export default class SurveyResponseDashboard extends LightningElement {
       this.dispatchEvent(new ShowToastEvent({ title: 'Error', message: err?.body?.message || 'Failed to delete response', variant: 'error' }));
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  refreshResponses() {
+    if (this.wiredResult) {
+      refreshApex(this.wiredResult);
     }
   }
 }

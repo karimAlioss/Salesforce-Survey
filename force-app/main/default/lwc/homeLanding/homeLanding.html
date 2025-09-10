@@ -1,0 +1,270 @@
+<template>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container header__container">
+      <div class="header__logo">
+        <img src={logoUrl} alt="Survey360 Logo" class="header__img" />
+      </div>
+      <nav class="header__nav">
+        <ul class="nav__list">
+          <li><a href="/" class="nav__link">Home</a></li>
+          <li><a href="/survey-list" class="nav__link">Surveys</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero__content">
+      <div class="hero__text">
+        <span class="hero__badge">
+          <svg class="icon-16" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2l1.6 4.3L18 8l-4.4 1.7L12 14l-1.6-4.3L6 8l4.4-1.7L12 2zM5 16l.9 2.4L8 19l-2.1.8L5 22l-.9-2.2L2 19l2.1-.6L5 16zm14 0l.9 2.4L22 19l-2.1.8L19 22l-.9-2.2L16 19l2.1-.6L19 16z" fill="currentColor"></path>
+          </svg>
+          SURVEY 360
+        </span>
+
+        <h1 class="hero__title">
+          AI-Powered Surveys with
+          <span class="text-gradient">Survey 360</span>
+        </h1>
+
+        <p class="hero__subtitle">
+          Gather smarter insights with AI-enhanced surveys. Create, share, and analyze surveys
+          effortlessly with the power of artificial intelligence.
+        </p>
+
+        <div class="hero__actions">
+          <a href="/survey-list" class="btn btn--primary-pill">
+            Surveys
+            <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M13 5l7 7-7 7M5 12h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <a href="#" class="btn btn--secondary-pill">
+            Get Started
+            <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.2 6.2l2.8 2.8M15 15l2.8 2.8M6.2 17.8L9 15M15 9l2.8-2.8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="hero__image">
+        <img src={heroUrl} alt="Hero Banner" onerror={handleHeroError} />
+      </div>
+    </div>
+  </section>
+
+  <!-- AI FEATURES (Highlight) -->
+  <section id="features" class="ai-features">
+    <div class="container">
+      <h2 class="ai-features__title">
+        Powered by <span class="text-gradient">Artificial Intelligence</span>
+      </h2>
+      <p class="ai-features__subtitle">
+        Transform your survey experience with cutting-edge AI technology that delivers deeper
+        insights and smarter analytics.
+      </p>
+
+      <div class="ai-features__grid">
+        <div class="ai-feature">
+          <div class="ai-feature__icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" fill="#ffffff"/>
+              <path d="M8 12h8M12 8v8" stroke="#8c52ff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="ai-feature__title">AI-Powered Insights</h3>
+          <p class="ai-feature__desc">
+            Our AI engine analyzes responses to provide actionable insights, uncovering patterns and trends you might miss.
+          </p>
+        </div>
+
+        <div class="ai-feature">
+          <div class="ai-feature__icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 20h16M4 10h16M4 4h16" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="ai-feature__title">Real-Time Analytics</h3>
+          <p class="ai-feature__desc">
+            Get live feedback as responses come in, with AI-driven summaries and instant data visualization.
+          </p>
+        </div>
+
+        <div class="ai-feature">
+          <div class="ai-feature__icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 12a5 5 0 110-10 5 5 0 010 10zM4 22a8 8 0 1116 0H4z" fill="#ffffff"/>
+            </svg>
+          </div>
+          <h3 class="ai-feature__title">Personalized Surveys</h3>
+          <p class="ai-feature__desc">
+            Leverage AI to tailor surveys to each respondent, improving completion rates and gathering more accurate results.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BOOST -->
+  <section class="cta-boost">
+    <div class="container cta-boost__wrap">
+      <h2 class="cta-boost__title">
+        Ready to take your surveys to the <span class="text-gradient">next level?</span>
+      </h2>
+      <p class="cta-boost__subtitle">
+        Join thousands of organizations already using Survey 360 to gather smarter insights
+        with AI-powered survey technology.
+      </p>
+      <a href="/survey-list" class="btn btn--cta-boost">Survey 360</a>
+    </div>
+  </section>
+
+  <!-- SPLIT 1: Collaborate with Your Team -->
+  <section class="split">
+    <div class="container split__grid">
+      <div class="split__col">
+        <h3 class="split__title">
+          Collaborate with <span class="text-gradient">Your Team</span>
+        </h3>
+        <p class="split__lead">
+          Work together seamlessly with real-time collaboration features. Share insights, assign tasks,
+          and make data-driven decisions with your entire organization.
+        </p>
+
+        <ul class="k-bullets">
+          <li><span class="k-dot"></span>Real-time team collaboration</li>
+          <li><span class="k-dot"></span>Shared analytics dashboards</li>
+          <li><span class="k-dot"></span>Role-based permissions</li>
+        </ul>
+
+        <a href="/s/collaborate" class="btn btn--ghost">Start Collaborating</a>
+      </div>
+
+      <div class="split__col">
+        <div class="split__image">
+          <img src={collabUrl} alt="Collaboration preview" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPLIT 2: Advanced AI Technology -->
+  <section class="split split--alt">
+    <div class="container split__grid">
+      <div class="split__col">
+        <div class="split__image">
+          <img src={aiTechUrl} alt="AI technology preview" />
+        </div>
+      </div>
+
+      <div class="split__col">
+        <h3 class="split__title">
+          Advanced <span class="text-gradient">AI Technology</span>
+        </h3>
+        <p class="split__lead">
+          Harness the power of cutting-edge artificial intelligence to transform raw survey data
+          into actionable business intelligence that drives growth.
+        </p>
+
+        <ul class="k-bullets">
+          <li><span class="k-dot"></span>Machine learning algorithms</li>
+          <li><span class="k-dot"></span>Predictive analytics</li>
+          <li><span class="k-dot"></span>Natural language processing</li>
+        </ul>
+
+        <a href="/s/features/ai" class="btn btn--ghost">Explore AI Features</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials">
+    <div class="container">
+      <h2 class="testimonials__title">
+        Trusted by <span class="text-gradient">Leading Companies</span>
+      </h2>
+      <p class="testimonials__subtitle">
+        Join thousands of organizations using Survey 360 to unlock valuable insights and make
+        smarter decisions with AI-powered survey analytics.
+      </p>
+
+      <div class="testimonials__grid">
+        <!-- Card 1 -->
+        <article class="testimonial">
+          <div class="testimonial__head">
+            <div class="testimonial__avatar">SJ</div>
+            <div>
+              <div class="testimonial__name">Sarah Johnson</div>
+              <div class="testimonial__role">Marketing Director at TechCorp</div>
+            </div>
+          </div>
+          <p class="testimonial__quote">
+            “Survey 360’s AI insights have transformed how we understand our customers.
+            The automated analysis saves us hours of work.”
+          </p>
+        </article>
+
+        <!-- Card 2 -->
+        <article class="testimonial">
+          <div class="testimonial__head">
+            <div class="testimonial__avatar">MC</div>
+            <div>
+              <div class="testimonial__name">Michael Chen</div>
+              <div class="testimonial__role">Product Manager at StartupXYZ</div>
+            </div>
+          </div>
+          <p class="testimonial__quote">
+            “The real-time analytics and AI-powered recommendations help us make
+            data-driven decisions faster than ever before.”
+          </p>
+        </article>
+
+        <!-- Card 3 -->
+        <article class="testimonial">
+          <div class="testimonial__head">
+            <div class="testimonial__avatar">ER</div>
+            <div>
+              <div class="testimonial__name">Emily Rodriguez</div>
+              <div class="testimonial__role">HR Manager at GlobalInc</div>
+            </div>
+          </div>
+          <p class="testimonial__quote">
+            “Our employee satisfaction surveys are now more engaging and insightful thanks to
+            Survey 360’s personalization features.”
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <img src={logoUrl} alt="Survey360 Logo" class="footer__logo" />
+        <p class="footer__tagline">Survey360 — Feedback that drives action.</p>
+      </div>
+      <div>
+        <h4 class="footer__title">Company</h4>
+        <ul class="footer__list">
+          <li><a href="/s/about" class="footer__link">About</a></li>
+          <li><a href="/s/careers" class="footer__link">Careers</a></li>
+          <li><a href="/s/support" class="footer__link">Support</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer__title">Resources</h4>
+        <ul class="footer__list">
+          <li><a href="/s/blog" class="footer__link">Blog</a></li>
+          <li><a href="/s/docs" class="footer__link">Documentation</a></li>
+          <li><a href="/s/contact" class="footer__link">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer__copy">© 2025 Survey360. All rights reserved.</p>
+  </footer>
+</template>

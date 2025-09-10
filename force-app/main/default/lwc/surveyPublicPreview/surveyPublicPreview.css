@@ -1,43 +1,36 @@
+/* Container */
 .survey-container {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 2rem;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .survey-container h2,
 .survey-container p {
-    text-align: center;
+  text-align: center;
 }
 
+/* Sections */
 .survey-section {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
 }
 
+/* Success Screen */
 .success-screen {
   max-width: 600px;
-    margin: 3rem auto;
-    text-align: center;
+  margin: 3rem auto;
+  text-align: center;
 }
+.success-icon { margin-bottom: 1.5rem; }
+.success-title { font-size: 1.75rem; margin: 1rem 0; }
+.success-text { font-size: 1rem; margin-bottom: 2rem; }
 
-.success-icon {
-  margin-bottom: 1.5rem;
-}
-
-.success-title {
-  font-size: 1.75rem;
-  margin: 1rem 0;
-}
-
-.success-text {
-  font-size: 1rem;
-  margin-bottom: 2rem;
-}
-
+/* Spinner */
 .spinner-overlay {
   position: fixed;
   top: 0;
@@ -51,6 +44,7 @@
   justify-content: center;
 }
 
+/* Headings & Labels */
 h3 {
   font-size: 1rem;
   font-weight: 600;
@@ -63,16 +57,12 @@ h3 {
   padding: 0.5rem 1rem;
   border-radius: 4px;
 }
+label { font-weight: 600; }
 
-label {
-  font-weight: 600;
-}
-
+/* Inputs & Boxes */
 .lightning-input,
 .lightning-combobox,
-.lightning-textarea {
-  margin-top: 0.3rem;
-}
+.lightning-textarea { margin-top: 0.3rem; }
 
 .slds-box {
   background: #ffffff;
@@ -81,15 +71,31 @@ label {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
 }
 
+/* Category Tag */
 .category-tag {
-    display: inline-block;
-    margin: 0 auto 1rem auto;
-    background-color: #e3fcef;
-    color: #007b5f;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 0.9rem;
-    text-align: center;
+  display: inline-block;
+  margin: 0 auto 1rem auto;
+  background-color: #e3fcef;
+  color: #007b5f;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  text-align: center;
 }
 
+/* Submit Button */
+.survey-container lightning-button[variant="brand"] {
+  --slds-c-button-brand-color-background: #8c52ff;
+  --slds-c-button-brand-color-border: #8c52ff;
+  --slds-c-button-brand-text-color: #ffffff;
+
+  --slds-c-button-brand-color-background-hover: #7a3fe6;
+  --slds-c-button-brand-color-border-hover: #7a3fe6;
+  --slds-c-button-brand-text-color-hover: #ffffff;
+
+  --slds-c-button-radius-border: 8px;
+  --slds-c-button-shadow: 0 2px 8px rgba(140, 82, 255, 0.18);
+  --slds-c-button-shadow-hover: 0 6px 16px rgba(140, 82, 255, 0.24);
+  --slds-c-button-shadow-focus: 0 0 0 4px rgba(140, 82, 255, 0.16);
+}

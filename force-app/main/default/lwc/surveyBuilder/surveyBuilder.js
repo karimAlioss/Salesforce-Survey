@@ -58,7 +58,7 @@ export default class SurveyBuilder extends LightningElement {
                     name: sectionName,
                     questions: [],
                     collapsed: false,
-                    iconName: 'utility:chevronup' // default expanded ⇒ up arrow
+                    iconName: 'utility:chevronup'
                 });
                 firstIndex.set(sectionName, idx);
             }
@@ -131,7 +131,6 @@ export default class SurveyBuilder extends LightningElement {
         });
     }
 
-    // Collapse/Expand (updates icon)
     toggleSectionCollapse(event) {
         const sectionId = event.target.dataset.id;
         this.sections = this.sections.map(section => {
@@ -143,8 +142,12 @@ export default class SurveyBuilder extends LightningElement {
         });
     }
 
-    // Section DnD
+    // Section DnD (handle-only)
     handleSectionDragStart(event) {
+        if (!event.target.closest || !event.target.closest('.drag-handle-section')) {
+            event.preventDefault();
+            return;
+        }
         this.draggedSectionId = event.currentTarget.dataset.sectionId;
         try {
             event.dataTransfer.setData('text/section', this.draggedSectionId);
@@ -265,7 +268,7 @@ export default class SurveyBuilder extends LightningElement {
         });
     }
 
-    // Options (only for choice types)
+    // Options
     addOption(event) {
         const sectionId = event.target.dataset.sectionId;
         const questionId = event.target.dataset.questionId;
@@ -319,8 +322,12 @@ export default class SurveyBuilder extends LightningElement {
         });
     }
 
-    // Question DnD (within same section)
+    // Question DnD (handle-only)
     handleQuestionDragStart(event) {
+        if (!event.target.closest || !event.target.closest('.drag-handle')) {
+            event.preventDefault();
+            return;
+        }
         const sectionId = event.currentTarget.dataset.sectionId;
         const questionId = event.currentTarget.dataset.questionId;
         event.dataTransfer.setData('text/plain', JSON.stringify({ sectionId, questionId }));
